@@ -310,7 +310,13 @@ const App: React.FC = () => {
     
     if (u) {
       const isAdminRole = ['Admin', 'SuperAdmin', 'Manager'].includes(u.role);
-      const finalView = requestedView || (isAdminRole ? 'admin' : 'user');
+      // Determine final view - respect toggle unless user role is insufficient
+      let finalView = requestedView || (isAdminRole ? 'admin' : 'user');
+      
+      // Safety: non-admins cannot force admin view
+      if (finalView === 'admin' && !isAdminRole) {
+          finalView = 'user';
+      }
 
       setCurrentUser(u as User);
       setIsAuthenticated(true);
@@ -360,7 +366,7 @@ const App: React.FC = () => {
            activeTab === AdminTab.MENUS ? <MenusPage t={t} menus={menus} setMenus={setMenus} onSync={m => sync('menus', m)} onSyncDelete={id => sync('menus', id, 'DELETE')} /> :
            activeTab === AdminTab.FORM_CREATOR ? <FormCreatorPage t={t} forms={forms} setForms={setForms} onSync={f => sync('form-templates', f)} onSyncDelete={id => sync('form-templates', id, 'DELETE')} /> :
            activeTab === AdminTab.DOCUMENTS ? <DocumentsPage t={t} documents={documents} setDocuments={setDocuments} onSync={d => sync('documents', d)} onSyncDelete={id => sync('documents', id, 'DELETE')} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} /> :
-           activeTab === AdminTab.PERSONNEL ? <PersonnelPage t={t} personnel={personnel} setPersonnel={setPersonnel} facilities={facilities} personnelDocs={personnelDocs} onSync={p => sync('personnel', p)} onSyncDelete={id => sync('personnel', id, 'DELETE')} onDocDelete={id => sync('personnel-docs', id, 'DELETE')} onDocUpdate={d => sync('personnel-docs', d)} /> :
+           activeTab === AdminTab.PERSONNEL ? <PersonnelPage t={t} personnel={personnel} setPersonnel={setPersonnel} facilities={facilities} personnelDocs={personnelDocs} onSync={p => sync('personnel', p)} onSyncDelete={id => sync('personnel', id, 'DELETE')} onDocDelete={id => sync('personnel-docs', id, 'DELETE')} onDocUpdate={d => sync('personnel-docs', d)} onDocUpload={d => sync('personnel-docs', d)} /> :
            activeTab === AdminTab.ASSIGNMENTS ? <AssignmentsPage t={t} assignments={assignments} setAssignments={setAssignments} users={users} facilities={facilities} forms={forms} menus={menus} facilityTypes={facilityTypes} onTabChange={setActiveTab as any} onSync={a => sync('assignments', a)} onSyncDelete={id => sync('assignments', id, 'DELETE')} /> :
            activeTab === AdminTab.REPORTS ? <ReportsPage t={t} currentUser={currentUser} readings={readings} formResponses={formResponses} menus={menus} fridges={fridges} users={users} facilities={facilities} excludedFacilities={excludedFacilities} forms={forms} assignments={assignments} /> :
            activeTab === AdminTab.FACILITY_ANALYTICS ? <FacilityAnalyticsPage t={t} facilities={facilities} alerts={alerts} readings={readings} facilityTypes={facilityTypes} /> :

@@ -11,7 +11,8 @@ interface PersonnelPageProps {
   onSync: (p: Personnel) => void;
   onSyncDelete: (id: string) => void;
   onDocDelete: (id: string) => void;
-  onDocUpdate?: (doc: PersonnelDocument) => void; // Added for visibility/metadata updates
+  onDocUpdate?: (doc: PersonnelDocument) => void;
+  onDocUpload?: (doc: PersonnelDocument) => void; // Added for admin uploads
 }
 
 const DOC_TYPES: { type: PersonnelDocType; icon: string; label: string }[] = [
@@ -21,7 +22,7 @@ const DOC_TYPES: { type: PersonnelDocType; icon: string; label: string }[] = [
 ];
 
 export const PersonnelPage: React.FC<PersonnelPageProps> = ({ 
-  t, personnel, setPersonnel, facilities, personnelDocs, onSync, onSyncDelete, onDocDelete, onDocUpdate 
+  t, personnel, setPersonnel, facilities, personnelDocs, onSync, onSyncDelete, onDocDelete, onDocUpdate, onDocUpload 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [facilityFilter, setFacilityFilter] = useState('all');
@@ -132,6 +133,26 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
     onSync(finalPerson);
     setIsModalOpen(false);
+  };
+
+  const handleAdminFileUpload = (e: React.ChangeEvent<HTMLInputElement>, personnelId: string, type: PersonnelDocType) => {
+    if (!e.target.files?.[0] || !onDocUpload) return;
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const base64 = ev.target?.result as string;
+      const newDoc: PersonnelDocument = {
+        id: `PDOC-${Date.now()}`,
+        personnelId: personnelId,
+        type: type,
+        content: base64,
+        mimeType: file.type,
+        createdAt: new Date().toISOString(),
+        visibleToUser: true
+      };
+      onDocUpload(newDoc);
+    };
+    reader.readAsDataURL(file);
   };
 
   const toggleDocRequirement = (doc: PersonnelDocType) => {
@@ -326,9 +347,16 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                              <span className="text-3xl">{dt.icon}</span>
                              <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{dt.type}</h4>
                           </div>
-                          <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${docs.length > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
-                             {docs.length > 0 ? `${docs.length} Dokument(e) vorhanden` : 'Fehlt'}
-                          </span>
+                          
+                          <div className="flex items-center gap-4">
+                             <label className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
+                                + Datei Upload
+                                <input type="file" className="hidden" accept="application/pdf,image/*" onChange={(e) => handleAdminFileUpload(e, viewingDocsPerson.id, dt.type)} />
+                             </label>
+                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${docs.length > 0 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                                {docs.length > 0 ? `${docs.length} Dokument(e) vorhanden` : 'Fehlt'}
+                             </span>
+                          </div>
                        </div>
 
                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-6">

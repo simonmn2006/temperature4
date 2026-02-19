@@ -46,6 +46,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Defaulting requestedView to undefined lets App.tsx handle logic based on database role
     onLogin(username.trim(), password.trim(), true);
   };
 
@@ -63,7 +64,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
       <div className={`absolute -top-24 -left-24 w-96 h-96 bg-${accentColor}-100 rounded-full blur-3xl opacity-50 pointer-events-none transition-colors duration-1000`} />
       <div className={`absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50 pointer-events-none transition-colors duration-1000`} />
 
-      <div className="w-full max-w-[440px] bg-white rounded-[3.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] p-12 border border-slate-100 relative z-10 text-left transition-all">
+      <div className="w-full max-w-[440px] bg-white rounded-[3.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] p-10 lg:p-12 border border-slate-100 relative z-10 text-left transition-all">
         {loginError && (
           <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-[90%] bg-rose-600 text-white px-6 py-3 rounded-2xl shadow-xl animate-shake flex items-center space-x-3">
              <span className="text-xl">⚠️</span>
@@ -71,7 +72,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
           </div>
         )}
 
-        <div className="flex flex-col items-center mb-10">
+        <div className="flex flex-col items-center mb-10 mt-4">
           <button 
             type="button"
             onClick={requestNotificationPermission}
