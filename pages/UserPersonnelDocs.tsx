@@ -54,6 +54,32 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
     reader.readAsDataURL(file);
   };
 
+  const handleDownload = (doc: PersonnelDocument) => {
+    const link = document.createElement('a');
+    link.href = doc.content;
+    const extension = doc.mimeType.split('/')[1] || 'bin';
+    link.download = `${doc.type}_${selectedPerson?.lastName || 'Dokument'}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePrint = (doc: PersonnelDocument) => {
+    const win = window.open('', '_blank');
+    if (!win) return;
+    if (doc.mimeType.includes('pdf')) {
+      win.location.href = doc.content;
+    } else {
+      win.document.write(`
+        <html>
+          <body style="margin:0; display:flex; align-items:center; justify-content:center;">
+            <img src="${doc.content}" style="max-width:100%; max-height:100vh; object-contain;" onload="window.print();window.close();" />
+          </body>
+        </html>
+      `);
+    }
+  };
+
   const startCamera = async (type: PersonnelDocType) => {
     setCameraType(type);
     setCapturedImage(null);
@@ -219,7 +245,7 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
         </div>
       )}
 
-      {/* ROBUST DOCUMENT PREVIEW MODAL */}
+      {/* ROBUST DOCUMENT PREVIEW MODAL WITH SAVE & PRINT */}
       {viewingDoc && (
         <div className="fixed inset-0 z-[3000] bg-slate-950/95 backdrop-blur-2xl flex flex-col p-4 md:p-10 animate-in fade-in zoom-in-95 duration-200">
            <div className="flex justify-between items-center mb-6 text-white max-w-7xl mx-auto w-full">
@@ -230,12 +256,26 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Erfasst am {new Date(viewingDoc.createdAt).toLocaleDateString('de-DE')}</p>
                  </div>
               </div>
-              <button 
-                onClick={() => setViewingDoc(null)} 
-                className="px-8 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-rose-600 transition-all flex items-center gap-3 border border-white/5"
-              >
-                <span>✕</span> <span>Schließen</span>
-              </button>
+              <div className="flex items-center gap-3">
+                 <button 
+                  onClick={() => handleDownload(viewingDoc)} 
+                  className="px-6 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-blue-600 transition-all flex items-center gap-3 border border-white/5"
+                 >
+                   <span>💾</span> <span>Speichern</span>
+                 </button>
+                 <button 
+                  onClick={() => handlePrint(viewingDoc)} 
+                  className="px-6 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-emerald-600 transition-all flex items-center gap-3 border border-white/5"
+                 >
+                   <span>🖨️</span> <span>Drucken</span>
+                 </button>
+                 <button 
+                  onClick={() => setViewingDoc(null)} 
+                  className="px-6 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-rose-600 transition-all flex items-center gap-3 border border-white/5 ml-4"
+                 >
+                   <span>✕</span> <span>Schließen</span>
+                 </button>
+              </div>
            </div>
            <div className="flex-1 w-full max-w-7xl mx-auto bg-white rounded-[2.5rem] overflow-hidden shadow-2xl relative flex items-center justify-center">
               {viewingDoc.mimeType.startsWith('image') ? (
