@@ -75,7 +75,7 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
       <header className="bg-slate-900 text-white p-12 rounded-[4rem] relative overflow-hidden shadow-2xl">
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2" />
          <div className="relative z-10">
-            <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-4">Anleitung</h1>
+            <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-4">Akademie</h1>
             <p className="text-slate-400 text-lg font-medium max-w-lg">
                Hier lernst du in wenigen Sekunden, wie du das System perfekt nutzt.
             </p>
