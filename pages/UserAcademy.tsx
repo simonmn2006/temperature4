@@ -31,6 +31,30 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
       ]
     },
     {
+      title: 'Meine Berichte',
+      icon: '📊',
+      color: 'indigo',
+      description: 'Deine Historie einsehen:',
+      steps: [
+        { t: 'Gehe auf den Tab "Meine Berichte" oben im Menü.', i: '📂' },
+        { t: 'Wähle den Zeitraum aus (z.B. letzte Woche).', i: '📅' },
+        { t: 'Alle deine Messungen erscheinen in einer Liste.', i: '📜' },
+        { t: 'Rote Einträge ("Lost Day") zeigen dir, wo eine Liste vergessen wurde.', i: '🚨' }
+      ]
+    },
+    {
+      title: 'Dokumente hochladen',
+      icon: '🗂️',
+      color: 'rose',
+      description: 'Gesundheitsausweis & Co. einreichen:',
+      steps: [
+        { t: 'Wähle deinen Namen in "Meine Dokumente" aus der Liste.', i: '👤' },
+        { t: 'Klicke auf das Kamera-Symbol neben der Dokumenten-Art.', i: '📸' },
+        { t: 'Mache ein scharfes Foto von deinem Ausweis oder Zertifikat.', i: '🤳' },
+        { t: 'Tippe auf "Foto speichern". Die Verwaltung erhält es sofort.', i: '💾' }
+      ]
+    },
+    {
       title: 'Handbücher lesen',
       icon: '📚',
       color: 'orange',
@@ -53,22 +77,23 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
          <div className="relative z-10">
             <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-4">Anleitung</h1>
             <p className="text-slate-400 text-lg font-medium max-w-lg">
-               Hier lernst du in 10 Sekunden, wie die App funktioniert. Wähle oben ein Symbol aus.
+               Hier lernst du in wenigen Sekunden, wie du das System perfekt nutzt.
             </p>
          </div>
       </header>
 
-      {/* ICON ONLY TABS */}
-      <div className="flex justify-center bg-white dark:bg-slate-900 p-3 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 w-fit mx-auto gap-4">
+      {/* ICON TABS */}
+      <div className="flex flex-wrap justify-center bg-white dark:bg-slate-900 p-4 rounded-[3rem] shadow-sm border border-slate-100 dark:border-slate-800 w-fit mx-auto gap-4">
          {lessons.map((lesson, idx) => (
             <button 
                key={idx}
                onClick={() => setActiveLesson(idx)}
-               className={`w-20 h-20 rounded-[2rem] flex items-center justify-center text-4xl transition-all ${
+               className={`w-16 h-16 lg:w-20 lg:h-20 rounded-[1.5rem] lg:rounded-[2rem] flex items-center justify-center text-3xl lg:text-4xl transition-all ${
                  activeLesson === idx 
                    ? `bg-${lesson.color}-600 text-white shadow-xl scale-110 rotate-3` 
                    : 'bg-slate-50 dark:bg-slate-800 text-slate-300 hover:text-slate-500'
                }`}
+               title={lesson.title}
             >
                {lesson.icon}
             </button>

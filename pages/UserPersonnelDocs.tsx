@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { TranslationSet, Personnel, PersonnelDocument, PersonnelDocType } from '../types';
 
 interface UserPersonnelDocsProps {
@@ -21,6 +21,7 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraType, setCameraType] = useState<PersonnelDocType | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<PersonnelDocument | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -87,7 +88,6 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
     const base64 = canvasRef.current.toDataURL('image/jpeg', 0.85);
     setCapturedImage(base64);
     
-    // Stop the actual video stream but keep modal open for preview
     if (videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach(track => track.stop());
@@ -111,10 +111,6 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
     setIsCameraOpen(false);
     setCapturedImage(null);
     setCameraType(null);
-  };
-
-  const retakePhoto = () => {
-    if (cameraType) startCamera(cameraType);
   };
 
   const stopCamera = () => {
@@ -186,17 +182,20 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
                    <div className="flex-1 p-10 flex flex-wrap gap-6 items-start content-start bg-white dark:bg-slate-900">
                       {docs.length > 0 ? docs.map(doc => (
                         <div key={doc.id} className="w-36 group">
-                           <div className="aspect-[3/4] bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden relative shadow-sm group-hover:shadow-2xl group-hover:scale-105 transition-all">
+                           <div 
+                             onClick={() => setViewingDoc(doc)}
+                             className="aspect-[3/4] bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden relative shadow-sm group-hover:shadow-2xl group-hover:scale-105 transition-all cursor-pointer"
+                           >
                               {doc.mimeType.startsWith('image') ? (
                                 <img src={doc.content} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800">
                                    <span className="text-4xl mb-2">📄</span>
-                                   <span className="text-[10px] font-black text-slate-400">PDF</span>
+                                   <span className="text-[10px] font-black text-slate-400 uppercase">Ansehen</span>
                                 </div>
                               )}
                               <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-4">
-                                 <button onClick={() => window.open(doc.content)} className="w-full text-white font-black text-[10px] uppercase tracking-widest border border-white/30 px-3 py-2.5 rounded-xl hover:bg-white/10 transition-colors">Vorschau</button>
+                                 <span className="text-white font-black text-[10px] uppercase tracking-widest border border-white/30 px-3 py-2.5 rounded-xl">Vorschau</span>
                               </div>
                            </div>
                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 text-center">{new Date(doc.createdAt).toLocaleDateString('de-DE')}</p>
@@ -217,6 +216,34 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
            <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner animate-pulse">🆔</div>
            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Identität Bestätigen</h3>
            <p className="text-slate-400 font-bold uppercase text-[11px] tracking-[0.2em] mt-4 max-w-sm mx-auto">Wählen Sie Ihren Namen aus der Liste oben rechts, um Ihre Dokumente zu verwalten.</p>
+        </div>
+      )}
+
+      {/* ROBUST DOCUMENT PREVIEW MODAL */}
+      {viewingDoc && (
+        <div className="fixed inset-0 z-[3000] bg-slate-950/95 backdrop-blur-2xl flex flex-col p-4 md:p-10 animate-in fade-in zoom-in-95 duration-200">
+           <div className="flex justify-between items-center mb-6 text-white max-w-7xl mx-auto w-full">
+              <div className="flex items-center gap-5">
+                 <span className="text-3xl">📄</span>
+                 <div>
+                    <h2 className="text-xl font-black uppercase tracking-tighter leading-tight">{viewingDoc.type}</h2>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Erfasst am {new Date(viewingDoc.createdAt).toLocaleDateString('de-DE')}</p>
+                 </div>
+              </div>
+              <button 
+                onClick={() => setViewingDoc(null)} 
+                className="px-8 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-rose-600 transition-all flex items-center gap-3 border border-white/5"
+              >
+                <span>✕</span> <span>Schließen</span>
+              </button>
+           </div>
+           <div className="flex-1 w-full max-w-7xl mx-auto bg-white rounded-[2.5rem] overflow-hidden shadow-2xl relative flex items-center justify-center">
+              {viewingDoc.mimeType.startsWith('image') ? (
+                <img src={viewingDoc.content} className="max-w-full max-h-full object-contain" alt="Dokument" />
+              ) : (
+                <iframe src={viewingDoc.content} className="w-full h-full border-none" title="PDF Vorschau" />
+              )}
+           </div>
         </div>
       )}
 
@@ -242,7 +269,6 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
                   <div className="absolute inset-0 border-[60px] border-black/40 pointer-events-none">
                      <div className="w-full h-full border-2 border-white/20 border-dashed rounded-[1.5rem]" />
                   </div>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/10 rounded-full pointer-events-none" />
                 </>
               ) : (
                 <img src={capturedImage} className="w-full h-full object-contain" alt="Vorschau" />
@@ -260,14 +286,14 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
               ) : (
                 <div className="flex gap-6 w-full max-w-md">
                    <button 
-                    onClick={retakePhoto}
+                    onClick={() => startCamera(cameraType!)}
                     className="flex-1 py-5 bg-white/10 text-white rounded-[1.75rem] font-black uppercase text-xs tracking-widest hover:bg-white/20 transition-all border border-white/10"
                    >
-                     🔄 Abbrechen / Neu
+                     🔄 Neu aufnehmen
                    </button>
                    <button 
                     onClick={saveCapturedPhoto}
-                    className="flex-1 py-5 bg-blue-600 text-white rounded-[1.75rem] font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all"
+                    className="flex-1 py-5 bg-blue-600 text-white rounded-[1.75rem] font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
                    >
                      ✅ Foto Speichern
                    </button>
