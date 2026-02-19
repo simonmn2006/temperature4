@@ -113,7 +113,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
     if (errors.size > 0) {
       setInvalidFields(errors);
-      setFormError("Pflichtfelder fehlen.");
+      setFormError("Vorname und Nachname sind erforderlich.");
       return;
     }
 
@@ -178,6 +178,13 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
       return `${base} border-rose-500 ring-4 ring-rose-500/10 animate-shake`;
     }
     return `${base} border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-blue-500/10`;
+  };
+
+  const confirmDeleteDoc = () => {
+    if (docToDelete) {
+      onDocDelete(docToDelete.id);
+      setDocToDelete(null);
+    }
   };
 
   return (
@@ -304,7 +311,76 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
         ))}
       </div>
 
-      {/* MODAL FOR ADD/EDIT PERSONNEL */}
+      {/* COMPLIANCE MANAGEMENT MODAL (EYE ICON) */}
+      {viewingDocsPerson && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4 z-[200] animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-4xl max-h-[90vh] rounded-[4rem] shadow-2xl flex flex-col overflow-hidden border border-white/10 text-left relative">
+            <div className="p-10 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+               <div className="flex items-center space-x-6">
+                  <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-[1.5rem] flex items-center justify-center text-4xl shadow-inner">📄</div>
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Compliance-Management</h3>
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{viewingDocsPerson.firstName} {viewingDocsPerson.lastName}</p>
+                  </div>
+               </div>
+               <button onClick={() => setViewingDocsPerson(null)} className="w-12 h-12 flex items-center justify-center rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-500 font-bold hover:scale-110 transition-all">✕</button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar">
+               {DOC_TYPES.filter(dt => viewingDocsPerson.requiredDocs.includes(dt.type)).map(dt => {
+                  const docs = personnelDocs.filter(d => d.personnelId === viewingDocsPerson.id && d.type === dt.type);
+                  return (
+                    <div key={dt.type} className="bg-slate-50 dark:bg-slate-800/50 rounded-[3rem] p-8 border border-slate-100 dark:border-slate-800">
+                       <div className="flex items-center justify-between mb-8">
+                          <div className="flex items-center gap-4">
+                             <span className="text-3xl">{dt.icon}</span>
+                             <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{dt.type}</h4>
+                          </div>
+                          <label className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
+                             + Upload
+                             <input type="file" className="hidden" accept="application/pdf,image/*" onChange={(e) => handleAdminFileUpload(e, viewingDocsPerson.id, dt.type)} />
+                          </label>
+                       </div>
+
+                       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-6">
+                          {docs.map(doc => (
+                            <div key={doc.id} className="group relative cursor-pointer" onClick={() => setPreviewDoc(doc)}>
+                               <div className={`aspect-[3/4] bg-white dark:bg-slate-900 rounded-2xl border transition-all overflow-hidden shadow-sm group-hover:shadow-xl relative ${doc.visibleToUser ? 'border-slate-200' : 'border-amber-400 opacity-75 grayscale'}`}>
+                                  {doc.mimeType.startsWith('image') ? (
+                                    <img src={doc.content} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-3xl font-black opacity-20">PDF</div>
+                                  )}
+                                  
+                                  <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2 p-4">
+                                     <button className="w-full bg-white text-slate-900 font-black text-[9px] uppercase tracking-widest py-2 rounded-xl">Ansehen</button>
+                                     <button 
+                                       onClick={(e) => { e.stopPropagation(); toggleDocVisibility(doc); }}
+                                       className={`w-full font-black text-[9px] uppercase tracking-widest py-2 rounded-xl transition-colors ${doc.visibleToUser ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                                     >
+                                       {doc.visibleToUser ? 'Verbergen' : 'Einblenden'}
+                                     </button>
+                                     <button 
+                                       onClick={(e) => { e.stopPropagation(); setDocToDelete(doc); }}
+                                       className="w-full bg-rose-600 text-white font-black text-[9px] uppercase tracking-widest py-2 rounded-xl hover:bg-rose-700 transition-colors"
+                                     >
+                                       Löschen
+                                     </button>
+                                  </div>
+                               </div>
+                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-3 text-center">{new Date(doc.createdAt).toLocaleDateString('de-DE')}</p>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                  );
+               })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT/ADD MODAL (PENCIL/PLUS ICON) */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3.5rem] shadow-2xl flex flex-col relative text-left border border-white/10 overflow-hidden">
@@ -330,7 +406,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                 </div>
               </div>
 
-              {/* RESTORED DOCUMENT ICONS */}
+              {/* RESTORED DOCUMENT REQUIREMENT ICONS */}
               <div className="space-y-6">
                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Erforderliche Dokumente</label>
                  <div className="grid grid-cols-3 gap-4">
@@ -369,7 +445,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                       onChange={e => { setFacilitySearch(e.target.value); setIsFacDropdownOpen(true); }}
                       onFocus={() => setIsFacDropdownOpen(true)}
                       className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold outline-none text-sm shadow-inner"
-                      placeholder="Standorte suchen..."
+                      placeholder="Standorte suchen & hinzufügen..."
                     />
                     {isFacDropdownOpen && modalFilteredFacilities.length > 0 && (
                       <div className="absolute bottom-full left-0 w-full mb-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-[60] max-h-48 overflow-y-auto custom-scrollbar animate-in slide-in-from-bottom-2">
@@ -403,7 +479,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
         </div>
       )}
 
-      {/* ROBUST DOCUMENT PREVIEWER */}
+      {/* INTERNAL DOCUMENT PREVIEWER */}
       {previewDoc && (
         <div className="fixed inset-0 z-[3000] bg-slate-950/95 backdrop-blur-2xl flex flex-col p-4 md:p-10 animate-in fade-in zoom-in-95 duration-200">
            <div className="flex justify-between items-center mb-6 text-white max-w-7xl mx-auto w-full">
@@ -427,6 +503,34 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
               ) : (
                 <iframe src={previewDoc.content} className="w-full h-full border-none" title="PDF Vorschau" />
               )}
+           </div>
+        </div>
+      )}
+
+      {/* DELETE DIALOGS */}
+      {personToDelete && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6 z-[200] animate-in fade-in duration-300">
+           <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[4rem] p-12 text-center shadow-2xl relative overflow-hidden border border-rose-500/20">
+              <div className="w-24 h-24 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner animate-pulse">☢️</div>
+              <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 uppercase tracking-tighter">Person löschen?</h3>
+              <p className="text-slate-500 dark:text-slate-400 mb-10 font-bold leading-relaxed text-base">Dauerhaft aus dem System entfernen?</p>
+              <div className="flex flex-col gap-4">
+                 <button onClick={() => { setPersonnel(prev => prev.filter(p => p.id !== personToDelete.id)); onSyncDelete(personToDelete.id); setPersonToDelete(null); }} className="w-full bg-rose-600 text-white font-black py-5 rounded-[1.75rem] uppercase text-sm tracking-widest shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition-colors">JA, LÖSCHEN</button>
+                 <button onClick={() => setPersonToDelete(null)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black py-5 rounded-[1.75rem] uppercase text-sm tracking-widest hover:bg-slate-200 transition-colors">Abbrechen</button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {docToDelete && (
+        <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6 z-[300] animate-in fade-in duration-300">
+           <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[3rem] p-10 text-center shadow-2xl relative border border-rose-500/20">
+              <div className="w-20 h-20 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🗑️</div>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Dokument löschen?</h3>
+              <div className="flex flex-col gap-3">
+                 <button onClick={confirmDeleteDoc} className="w-full bg-rose-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest">Löschen</button>
+                 <button onClick={() => setDocToDelete(null)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black py-4 rounded-2xl uppercase text-xs tracking-widest">Abbrechen</button>
+              </div>
            </div>
         </div>
       )}
