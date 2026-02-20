@@ -212,8 +212,7 @@ export const UserDashboardLayout: React.FC<UserDashboardLayoutProps> = ({
 
         <div className="flex items-center space-x-4">
           <div className="hidden sm:block text-right">
-             <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-tight mb-0.5">{currentUser.name}</p>
-             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Mitarbeiter</p>
+             <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{currentUser.name}</p>
           </div>
           <button 
             onClick={onLogout}

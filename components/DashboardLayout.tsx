@@ -129,8 +129,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <div className="h-8 w-px bg-slate-100 dark:bg-slate-800 hidden sm:block" />
             <div className="flex items-center space-x-3">
               <div className="text-right hidden sm:block">
-                <p className="text-xs font-black text-slate-900 dark:text-white uppercase leading-none">{currentUser.name}</p>
-                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">{currentUser.role}</p>
+                <p className="text-sm font-black text-slate-900 dark:text-white uppercase leading-none">{currentUser.name}</p>
               </div>
               <img src={`https://picsum.photos/seed/${currentUser.id}/120/120`} className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl border-2 border-white dark:border-slate-800 shadow-sm" alt="Avatar" />
             </div>

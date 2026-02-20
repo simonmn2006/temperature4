@@ -84,7 +84,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
              )}
           </button>
           <h1 className="text-3xl font-black text-slate-900 italic tracking-tighter text-center">gourmetta</h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2 text-center">Zentraler System-Zugang</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2 text-center">HCCP Central</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -120,13 +120,6 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
           </button>
 
           <div className="flex flex-col items-center space-y-4 pt-8 border-t border-slate-50">
-             <div className="flex items-center space-x-3">
-                <div className={`w-2 h-2 rounded-full ${backendOffline ? 'bg-amber-500' : 'bg-emerald-500'} shadow-sm`} />
-                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider">
-                  {backendOffline ? 'Local Vault Mode' : 'Cloud Sync Connected'}
-                </span>
-             </div>
-             
              <div className="flex items-center space-x-4">
                 <button 
                   type="button"
