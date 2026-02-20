@@ -61,5 +61,21 @@ export const germanTranslations: TranslationSet = {
     roles: 'Rollen & Rechte',
     permissions: 'Berechtigungen',
     email: 'E-Mail Adresse'
+  },
+  vault: {
+    title: 'Dokumenten-Tresor',
+    setupTitle: 'Tresor einrichten',
+    setupDesc: 'Legen Sie einen 6-stelligen PIN fest, um Ihre Dokumente zu schützen.',
+    enterTitle: 'Tresor gesperrt',
+    enterDesc: 'Bitte geben Sie Ihren PIN ein, um fortzufahren.',
+    pinLabel: 'PIN eingeben',
+    pinConfirmLabel: 'PIN bestätigen',
+    unlock: 'Entsperren',
+    savePin: 'PIN speichern',
+    errorMismatch: 'Die PINs stimmen nicht überein.',
+    errorWrong: 'Falscher PIN. Bitte versuchen Sie es erneut.',
+    resetRequest: 'PIN vergessen?',
+    resetSuccess: 'Anfrage gesendet. Bitte wenden Sie sich an die Verwaltung.',
+    adminReset: 'Tresor-PIN zurücksetzen'
   }
 };

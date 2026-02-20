@@ -45,7 +45,8 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
     lastName: '',
     facilityIds: [],
     requiredDocs: ['Gesundheitsausweis', 'Infektionsschutzschulung', 'Masernschutz'],
-    status: 'Active'
+    status: 'Active',
+    isSpringer: false
   });
 
   const [facilitySearch, setFacilitySearch] = useState('');
@@ -117,7 +118,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
     setInvalidFields(new Set());
     if (person) {
       setEditingPerson(person);
-      setFormData({ ...person });
+      setFormData({ ...person, isSpringer: !!person.isSpringer });
     } else {
       setEditingPerson(null);
       setFormData({
@@ -125,7 +126,8 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
         lastName: '',
         facilityIds: [],
         requiredDocs: ['Gesundheitsausweis', 'Infektionsschutzschulung', 'Masernschutz'],
-        status: 'Active'
+        status: 'Active',
+        isSpringer: false
       });
     }
     setFacilitySearch('');
@@ -151,7 +153,9 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
       lastName: formData.lastName!.trim(),
       facilityIds: formData.facilityIds || [],
       requiredDocs: formData.requiredDocs || [],
-      status: formData.status || 'Active'
+      status: formData.status || 'Active',
+      vaultPin: editingPerson?.vaultPin, // Preserve PIN on edit
+      isSpringer: !!formData.isSpringer
     };
 
     if (editingPerson) {
@@ -162,6 +166,21 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
     onSync(finalPerson);
     setIsModalOpen(false);
+  };
+
+  const handleResetPin = async (personId: string) => {
+    if (!confirm(t.vault.adminReset + "?")) return;
+    try {
+      const res = await fetch(`http://${window.location.hostname}:3001/api/personnel/${personId}/reset-pin`, {
+        method: 'POST'
+      });
+      if (res.ok) {
+        setPersonnel(prev => prev.map(p => p.id === personId ? { ...p, vaultPin: undefined } : p));
+        alert("PIN erfolgreich zurückgesetzt.");
+      }
+    } catch (e) {
+      alert("Fehler beim Zurücksetzen der PIN.");
+    }
   };
 
   const handleAdminFileUpload = (e: React.ChangeEvent<HTMLInputElement>, personnelId: string, type: PersonnelDocType) => {
@@ -303,9 +322,14 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
              
              <div className="mb-6">
                <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight uppercase tracking-tight">{p.firstName} {p.lastName}</h3>
-               {p.status === 'Inactive' && (
-                 <span className="inline-block mt-2 px-3 py-1 bg-slate-100 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-slate-200">Personal Inaktiv</span>
-               )}
+               <div className="flex flex-wrap gap-2 mt-2">
+                 {p.status === 'Inactive' && (
+                   <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-slate-200">Personal Inaktiv</span>
+                 )}
+                 {p.isSpringer && (
+                   <span className="px-3 py-1 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase border border-blue-700 shadow-sm">Springer</span>
+                 )}
+               </div>
              </div>
 
              <div className="flex flex-wrap gap-2 mb-8 min-h-[40px]">
@@ -497,6 +521,34 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                     <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all ${formData.status === 'Active' ? 'left-9' : 'left-1'}`} />
                  </button>
               </div>
+
+              <div className="p-6 bg-slate-50 dark:bg-slate-800/30 rounded-[2rem] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                 <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Springer-Status</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{formData.isSpringer ? 'An allen Standorten sichtbar' : 'Nur an zugewiesenen Standorten'}</p>
+                 </div>
+                 <button 
+                   onClick={() => setFormData({...formData, isSpringer: !formData.isSpringer})}
+                   className={`w-16 h-8 rounded-full transition-all relative ${formData.isSpringer ? 'bg-blue-600 shadow-lg shadow-blue-500/20' : 'bg-slate-300'}`}
+                 >
+                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all ${formData.isSpringer ? 'left-9' : 'left-1'}`} />
+                 </button>
+              </div>
+
+              {editingPerson && editingPerson.vaultPin && (
+                <div className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-[2rem] border border-amber-100 dark:border-amber-800/30 flex items-center justify-between">
+                   <div>
+                      <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Tresor-Sicherheit</p>
+                      <p className="text-sm font-bold text-amber-900 dark:text-amber-200">PIN ist aktiv gesetzt</p>
+                   </div>
+                   <button 
+                     onClick={() => handleResetPin(editingPerson.id)}
+                     className="px-4 py-2 bg-amber-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all"
+                   >
+                      {t.vault.adminReset}
+                   </button>
+                </div>
+              )}
             </div>
 
             <div className="p-8 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end space-x-4">

@@ -378,7 +378,7 @@ const App: React.FC = () => {
            activeTab === 'user_forms' ? <UserForms t={t} user={currentUser} forms={forms} assignments={assignments} excludedFacilities={excludedFacilities} facilityTypes={facilityTypes} facilities={facilities} onSave={(d) => { setFormResponses(prev => [d, ...prev]); sync('form-responses', d); }} formResponses={formResponses} /> :
            activeTab === 'user_library' ? <UserLibrary t={t} documents={documents} /> :
            activeTab === 'user_academy' ? <UserAcademy t={t} /> :
-           activeTab === 'user_personnel' ? <UserPersonnelDocs t={t} personnel={personnel} personnelDocs={personnelDocs} onUpload={d => sync('personnel-docs', d)} activeFacilityId={currentUser?.facilityId || ''} /> :
+           activeTab === 'user_personnel' ? <UserPersonnelDocs t={t} personnel={personnel} personnelDocs={personnelDocs} onUpload={d => sync('personnel-docs', d)} onPersonnelUpdate={p => { setPersonnel(prev => prev.map(pers => pers.id === p.id ? p : pers)); sync('personnel', p); }} activeFacilityId={currentUser?.facilityId || ''} /> :
            <UserReports t={t} user={currentUser} readings={readings} menus={menus} fridges={fridges} fridgeTypes={fridgeTypes} cookingMethods={cookingMethods} facilities={facilities} assignments={assignments} formResponses={formResponses} excludedFacilities={excludedFacilities} forms={forms} facilityTypes={facilityTypes} lostDays={[]} />}
         </UserDashboardLayout>
       )}

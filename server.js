@@ -159,9 +159,16 @@ app.delete('/api/documents/:id', (req, res) => query('DELETE FROM documents WHER
 
 app.get('/api/personnel', (req, res) => query('SELECT * FROM personnel').then(r => res.json(r || [])));
 app.post('/api/personnel', async (req, res) => {
-    const { id, firstName, lastName, facilityIds, requiredDocs, status } = req.body;
+    const { id, firstName, lastName, facilityIds, requiredDocs, status, vaultPin, isSpringer } = req.body;
     try {
-        await pool.query('INSERT INTO personnel (id, firstName, lastName, facilityIds, requiredDocs, status) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE firstName=VALUES(firstName), lastName=VALUES(lastName), facilityIds=VALUES(facilityIds), requiredDocs=VALUES(requiredDocs), status=VALUES(status)', [id, firstName, lastName, JSON.stringify(facilityIds), JSON.stringify(requiredDocs), status || 'Active']);
+        await pool.query('INSERT INTO personnel (id, firstName, lastName, facilityIds, requiredDocs, status, vaultPin, isSpringer) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE firstName=VALUES(firstName), lastName=VALUES(lastName), facilityIds=VALUES(facilityIds), requiredDocs=VALUES(requiredDocs), status=VALUES(status), vaultPin=IFNULL(VALUES(vaultPin), vaultPin), isSpringer=VALUES(isSpringer)', [id, firstName, lastName, JSON.stringify(facilityIds), JSON.stringify(requiredDocs), status || 'Active', vaultPin || null, !!isSpringer]);
+        res.sendStatus(200);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/personnel/:id/reset-pin', async (req, res) => {
+    try {
+        await pool.query('UPDATE personnel SET vaultPin = NULL WHERE id = ?', [req.params.id]);
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

@@ -39,6 +39,8 @@ export interface Personnel {
   facilityIds: string[];
   requiredDocs: PersonnelDocType[];
   status: 'Active' | 'Inactive';
+  vaultPin?: string; // Hashed PIN for document access
+  isSpringer?: boolean; // If true, visible in all facilities
 }
 
 export interface PersonnelDocument {
@@ -264,5 +266,21 @@ export interface TranslationSet {
     roles: string;
     permissions: string;
     email: string;
+  };
+  vault: {
+    title: string;
+    setupTitle: string;
+    setupDesc: string;
+    enterTitle: string;
+    enterDesc: string;
+    pinLabel: string;
+    pinConfirmLabel: string;
+    unlock: string;
+    savePin: string;
+    errorMismatch: string;
+    errorWrong: string;
+    resetRequest: string;
+    resetSuccess: string;
+    adminReset: string;
   };
 }

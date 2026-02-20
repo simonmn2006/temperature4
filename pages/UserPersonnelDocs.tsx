@@ -7,6 +7,7 @@ interface UserPersonnelDocsProps {
   personnel: Personnel[];
   personnelDocs: PersonnelDocument[];
   onUpload: (doc: PersonnelDocument) => void;
+  onPersonnelUpdate: (p: Personnel) => void;
   activeFacilityId: string;
 }
 
@@ -16,8 +17,12 @@ const DOC_TYPES: { type: PersonnelDocType; icon: string; label: string }[] = [
   { type: 'Masernschutz', icon: '💉', label: 'Masern' }
 ];
 
-export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel, personnelDocs, onUpload, activeFacilityId }) => {
+export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personnel, personnelDocs, onUpload, onPersonnelUpdate, activeFacilityId }) => {
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [vaultError, setVaultError] = useState<string | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraType, setCameraType] = useState<PersonnelDocType | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
@@ -27,12 +32,53 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const myPersonnel = useMemo(() => {
-    return personnel.filter(p => p.status === 'Active' && p.facilityIds.includes(activeFacilityId));
+    return personnel.filter(p => p.status === 'Active' && (p.isSpringer || p.facilityIds.includes(activeFacilityId)));
   }, [personnel, activeFacilityId]);
 
   const selectedPerson = useMemo(() => {
     return myPersonnel.find(p => p.id === selectedPersonId);
   }, [myPersonnel, selectedPersonId]);
+
+  useEffect(() => {
+    setIsUnlocked(false);
+    setPin('');
+    setConfirmPin('');
+    setVaultError(null);
+  }, [selectedPersonId]);
+
+  const hashPin = async (rawPin: string) => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(rawPin);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const handleSetPin = async () => {
+    if (pin.length < 4) return;
+    if (pin !== confirmPin) {
+      setVaultError(t.vault.errorMismatch);
+      return;
+    }
+    const hashed = await hashPin(pin);
+    if (selectedPerson) {
+      const updatedPerson = { ...selectedPerson, vaultPin: hashed };
+      onPersonnelUpdate(updatedPerson);
+      setIsUnlocked(true);
+    }
+  };
+
+  const handleUnlock = async () => {
+    if (!selectedPerson?.vaultPin) return;
+    const hashed = await hashPin(pin);
+    if (hashed === selectedPerson.vaultPin) {
+      setIsUnlocked(true);
+      setVaultError(null);
+    } else {
+      setVaultError(t.vault.errorWrong);
+      setPin('');
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, type: PersonnelDocType) => {
     if (!selectedPersonId || !e.target.files?.[0]) return;
@@ -168,7 +214,7 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
               >
                   <option value="">Namen wählen...</option>
                   {myPersonnel.map(p => (
-                    <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>
+                    <option key={p.id} value={p.id}>{p.firstName} {p.lastName} {p.isSpringer ? '(Springer)' : ''}</option>
                   ))}
               </select>
               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">▼</span>
@@ -177,66 +223,134 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ personnel,
       </header>
 
       {selectedPerson ? (
-        <div className="space-y-8">
-           {DOC_TYPES.filter(dt => selectedPerson.requiredDocs.includes(dt.type)).map(dt => {
-              const docs = personnelDocs.filter(d => d.personnelId === selectedPersonId && d.type === dt.type && (d.visibleToUser !== false));
-              return (
-                <div key={dt.type} className="bg-white dark:bg-slate-900 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col lg:flex-row min-h-[300px]">
-                   <div className="p-10 lg:w-96 bg-slate-50 dark:bg-slate-800/30 border-r border-slate-100 dark:border-slate-800 flex flex-col justify-between">
-                      <div>
-                        <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-3xl flex items-center justify-center text-5xl mb-6 shadow-inner ring-1 ring-slate-100 dark:ring-slate-700">{dt.icon}</div>
-                        <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight mb-2">{dt.label}</h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{dt.type}</p>
-                      </div>
-                      
-                      <div className="mt-10 flex gap-3">
-                        <label className="flex-1 px-4 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase text-center cursor-pointer hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2">
-                           <span>📂</span>
-                           <span>Datei</span>
-                           <input type="file" className="hidden" accept="application/pdf,image/*" onChange={e => handleFileUpload(e, dt.type)} />
-                        </label>
-                        <button 
-                          onClick={() => startCamera(dt.type)} 
-                          className="w-16 h-16 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all"
-                          title="Foto machen"
-                        >
-                          📸
-                        </button>
-                      </div>
-                   </div>
-                   
-                   <div className="flex-1 p-10 flex flex-wrap gap-6 items-start content-start bg-white dark:bg-slate-900">
-                      {docs.length > 0 ? docs.map(doc => (
-                        <div key={doc.id} className="w-36 group">
-                           <div 
-                             onClick={() => setViewingDoc(doc)}
-                             className="aspect-[3/4] bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden relative shadow-sm group-hover:shadow-2xl group-hover:scale-105 transition-all cursor-pointer"
-                           >
-                              {doc.mimeType.startsWith('image') ? (
-                                <img src={doc.content} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800">
-                                   <span className="text-4xl mb-2">📄</span>
-                                   <span className="text-[10px] font-black text-slate-400 uppercase">Ansehen</span>
+        isUnlocked ? (
+          <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+             {DOC_TYPES.filter(dt => selectedPerson.requiredDocs.includes(dt.type)).map(dt => {
+                const docs = personnelDocs.filter(d => d.personnelId === selectedPersonId && d.type === dt.type && (d.visibleToUser !== false));
+                return (
+                  <div key={dt.type} className="bg-white dark:bg-slate-900 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col lg:flex-row min-h-[300px]">
+                     <div className="p-10 lg:w-96 bg-slate-50 dark:bg-slate-800/30 border-r border-slate-100 dark:border-slate-800 flex flex-col justify-between">
+                        <div>
+                          <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-3xl flex items-center justify-center text-5xl mb-6 shadow-inner ring-1 ring-slate-100 dark:ring-slate-700">{dt.icon}</div>
+                          <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight mb-2">{dt.label}</h3>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{dt.type}</p>
+                        </div>
+                        
+                        <div className="mt-10 flex gap-3">
+                          <label className="flex-1 px-4 py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase text-center cursor-pointer hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 active:scale-95 flex items-center justify-center gap-2">
+                             <span>📂</span>
+                             <span>Datei</span>
+                             <input type="file" className="hidden" accept="application/pdf,image/*" onChange={e => handleFileUpload(e, dt.type)} />
+                          </label>
+                          <button 
+                            onClick={() => startCamera(dt.type)} 
+                            className="w-16 h-16 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all"
+                            title="Foto machen"
+                          >
+                            📸
+                          </button>
+                        </div>
+                     </div>
+                     
+                     <div className="flex-1 p-10 flex flex-wrap gap-6 items-start content-start bg-white dark:bg-slate-900">
+                        {docs.length > 0 ? docs.map(doc => (
+                          <div key={doc.id} className="w-36 group">
+                             <div 
+                               onClick={() => setViewingDoc(doc)}
+                               className="aspect-[3/4] bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 overflow-hidden relative shadow-sm group-hover:shadow-2xl group-hover:scale-105 transition-all cursor-pointer"
+                             >
+                                {doc.mimeType.startsWith('image') ? (
+                                  <img src={doc.content} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800">
+                                     <span className="text-4xl mb-2">📄</span>
+                                     <span className="text-[10px] font-black text-slate-400 uppercase">Ansehen</span>
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-4">
+                                   <span className="text-white font-black text-[10px] uppercase tracking-widest border border-white/30 px-3 py-2.5 rounded-xl">Vorschau</span>
                                 </div>
-                              )}
-                              <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-4">
-                                 <span className="text-white font-black text-[10px] uppercase tracking-widest border border-white/30 px-3 py-2.5 rounded-xl">Vorschau</span>
-                              </div>
-                           </div>
-                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 text-center">{new Date(doc.createdAt).toLocaleDateString('de-DE')}</p>
-                        </div>
-                      )) : (
-                        <div className="flex-1 h-full min-h-[160px] flex flex-col items-center justify-center border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem] opacity-30">
-                           <span className="text-5xl mb-4 grayscale">📥</span>
-                           <p className="text-[11px] font-black uppercase tracking-widest">Kein Dokument vorhanden</p>
-                        </div>
-                      )}
-                   </div>
+                             </div>
+                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 text-center">{new Date(doc.createdAt).toLocaleDateString('de-DE')}</p>
+                          </div>
+                        )) : (
+                          <div className="flex-1 h-full min-h-[160px] flex flex-col items-center justify-center border-4 border-dashed border-slate-100 dark:border-slate-800 rounded-[3rem] opacity-30">
+                             <span className="text-5xl mb-4 grayscale">📥</span>
+                             <p className="text-[11px] font-black uppercase tracking-widest">Kein Dokument vorhanden</p>
+                          </div>
+                        )}
+                     </div>
+                  </div>
+                );
+             })}
+          </div>
+        ) : (
+          <div className="max-w-md mx-auto bg-white dark:bg-slate-900 p-12 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 shadow-2xl animate-in zoom-in-95 duration-300">
+             <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-3xl flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner">
+                {selectedPerson.vaultPin ? '🔒' : '🆕'}
+             </div>
+             
+             <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic mb-2">
+                {selectedPerson.vaultPin ? t.vault.enterTitle : t.vault.setupTitle}
+             </h2>
+             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10">
+                {selectedPerson.vaultPin ? t.vault.enterDesc : t.vault.setupDesc}
+             </p>
+
+             {vaultError && (
+               <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-[10px] font-black uppercase tracking-widest animate-shake">
+                  ⚠️ {vaultError}
+               </div>
+             )}
+
+             <div className="space-y-6">
+                <div className="space-y-2">
+                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 text-left">{t.vault.pinLabel}</label>
+                   <input 
+                     type="password" 
+                     inputMode="numeric"
+                     maxLength={6}
+                     value={pin}
+                     onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
+                     className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-center text-2xl font-black tracking-[1em] outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
+                     placeholder="••••••"
+                   />
                 </div>
-              );
-           })}
-        </div>
+
+                {!selectedPerson.vaultPin && (
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 text-left">{t.vault.pinConfirmLabel}</label>
+                    <input 
+                      type="password" 
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={confirmPin}
+                      onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+                      className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-center text-2xl font-black tracking-[1em] outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
+                      placeholder="••••••"
+                    />
+                  </div>
+                )}
+
+                <button 
+                  onClick={selectedPerson.vaultPin ? handleUnlock : handleSetPin}
+                  disabled={pin.length < 4 || (!selectedPerson.vaultPin && confirmPin.length < 4)}
+                  className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-30 disabled:grayscale transition-all active:scale-95"
+                >
+                   {selectedPerson.vaultPin ? t.vault.unlock : t.vault.savePin}
+                </button>
+
+                {selectedPerson.vaultPin && (
+                  <button 
+                    onClick={() => alert(t.vault.resetSuccess)}
+                    className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors mt-4"
+                  >
+                    {t.vault.resetRequest}
+                  </button>
+                )}
+             </div>
+          </div>
+        )
       ) : (
         <div className="py-32 text-center bg-white dark:bg-slate-900 rounded-[4rem] border-4 border-dashed border-slate-100 dark:border-slate-800 shadow-inner">
            <div className="w-24 h-24 bg-blue-50 dark:bg-blue-900/30 text-blue-500 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner animate-pulse">🆔</div>
