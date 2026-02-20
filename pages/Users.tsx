@@ -36,10 +36,7 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                            u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (u.email || '').toLowerCase().includes(searchTerm.toLowerCase());
       
-      // Managers only see standard users
       if (currentUser.role === 'Manager') return matchesSearch && u.role === 'User';
-      
-      // SuperAdmins and Admins see everyone (including SuperAdmin)
       return matchesSearch;
     });
   }, [users, searchTerm, currentUser.role]);
@@ -101,6 +98,11 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
     if (!formData.username?.trim()) errors.add('username');
     if (!editingUser && !formData.password?.trim()) errors.add('password');
 
+    // Only require email for non-User roles
+    if (formData.role !== 'User' && !formData.email?.trim()) {
+        errors.add('email');
+    }
+
     if (errors.size > 0) {
       setInvalidFields(errors);
       showAlert("Bitte Pflichtfelder ausfüllen.", 'error');
@@ -110,6 +112,8 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
     const finalUser = {
       ...(editingUser || {}),
       ...formData,
+      // Clear email if role is standard User to keep DB clean
+      email: formData.role === 'User' ? '' : formData.email,
       id: editingUser?.id || `U-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
       password: formData.password ? formData.password : editingUser?.password
     } as User;
@@ -125,8 +129,6 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
   const removeManagedId = (id: string) => {
     setFormData({ ...formData, managedFacilityIds: (formData.managedFacilityIds || []).filter(mid => mid !== id) });
   };
-
-  const isPrivilegedRole = (role?: string) => ['Admin', 'SuperAdmin', 'Manager'].includes(role || '');
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 relative">
@@ -166,7 +168,7 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                 <td className="px-8 py-6">
                   <span className="font-bold text-slate-900 dark:text-white block">{user.name}</span>
                   <span className={`text-[10px] font-black uppercase ${user.role === 'SuperAdmin' ? 'text-rose-600' : 'text-blue-600'}`}>@{user.username} • {user.role}</span>
-                  {user.email && (
+                  {user.role !== 'User' && user.email && (
                     <span className="block text-[9px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">{user.email}</span>
                   )}
                 </td>
@@ -220,16 +222,18 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">E-Mail Adresse</label>
-                <input 
-                  type="email" 
-                  value={formData.email} 
-                  onChange={e => setFormData({...formData, email: e.target.value})} 
-                  className="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 font-bold text-sm outline-none" 
-                  placeholder="name@gourmetta.de" 
-                />
-              </div>
+              {formData.role !== 'User' && (
+                <div className="animate-in slide-in-from-top-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">E-Mail Adresse (Pflicht für Admin/Manager)</label>
+                  <input 
+                    type="email" 
+                    value={formData.email} 
+                    onChange={e => setFormData({...formData, email: e.target.value})} 
+                    className={getFieldClass('email')} 
+                    placeholder="name@gourmetta.de" 
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                  <div>

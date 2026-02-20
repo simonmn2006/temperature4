@@ -409,7 +409,13 @@ app.listen(PORT, async () => {
         
         await testConn.query(`INSERT IGNORE INTO settings_smtp (id, host, port, secure) VALUES ('GLOBAL', 'smtp.strato.de', 465, 1)`);
         await testConn.query(`INSERT IGNORE INTO settings_telegram (id, token, chatId) VALUES ('GLOBAL', '', '')`);
-        await testConn.query(`INSERT IGNORE INTO settings_legal (id, imprint, privacy) VALUES ('GLOBAL', 'Gourmetta GmbH', 'Datenschutzrichtlinie')`);
+        
+        // Detailed German GDPR Policy for internal enterprise use
+        const privacyText = `DATENSCHUTZERKLÄRUNG (DSGVO)\n\n1. Verantwortlicher\nVerantwortlich für die Datenverarbeitung in dieser Anwendung ist die Gourmetta GmbH (Anschrift siehe Impressum).\n\n2. Zweck und Rechtsgrundlage der Verarbeitung\na) Erfüllung gesetzlicher Dokumentationspflichten (HACCP): Wir verarbeiten Ihre Messdaten zur Einhaltung lebensmittelrechtlicher Vorschriften gemäß Art. 6 Abs. 1 lit. c DSGVO.\nb) Personalverwaltung: Die Verarbeitung von Personaldaten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Arbeitsverhältnis).\nc) Gesundheitsdaten: Die Verarbeitung von Gesundheitszeugnissen erfolgt gemäß Art. 9 Abs. 2 lit. b DSGVO i.V.m. dem Infektionsschutzgesetz.\n\n3. Speicherdauer\nDaten werden gemäß den gesetzlichen Aufbewahrungsfristen (i.d.R. 2 Jahre für HACCP-Logs) gespeichert.`;
+        const imprintText = `Gourmetta GmbH\nHauptstraße 1\n01234 Beispielstadt\n\nGeschäftsführung: Max Mustermann`;
+
+        await testConn.query(`INSERT IGNORE INTO settings_legal (id, imprint, privacy) VALUES ("GLOBAL", ?, ?) ON DUPLICATE KEY UPDATE privacy=VALUES(privacy)`, [imprintText, privacyText]);
+        
         await testConn.query(`INSERT IGNORE INTO environmental_impact (id, pagesSaved, tonerSaved) VALUES ('GLOBAL', 0, 0.0)`);
         testConn.release();
     } catch (e) { 
