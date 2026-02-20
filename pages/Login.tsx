@@ -67,7 +67,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
 
   const getStatusColor = () => {
     if (notifPermission === 'granted') return 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-500/20 ring-4 ring-emerald-500/10';
-    if (notifPermission === 'denied') return 'bg-slate-100 text-slate-400 border-slate-200'; // Removed Pink (Rose)
+    if (notifPermission === 'denied') return 'bg-slate-100 text-slate-400 border-slate-200'; // Neutral instead of Pink/Rose
     return 'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-500/20 animate-pulse';
   };
 
@@ -145,7 +145,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
       </div>
 
       {showLegal && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
           <div className="bg-white rounded-[3.5rem] w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl border border-white/20 overflow-hidden text-left">
             <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic">

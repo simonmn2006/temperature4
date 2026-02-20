@@ -1,3 +1,4 @@
+
 {
   "name": "gourmetta-haccp-portal",
   "private": true,
@@ -15,7 +16,7 @@
     "recharts": "^2.15.0",
     "lucide-react": "^0.468.0",
     "express": "^4.21.1",
-    "mariadb": "^3.4.0",
+    "mariadb": "3.2.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "nodemailer": "^6.9.16"
