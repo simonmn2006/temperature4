@@ -101,7 +101,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       </aside>
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden w-full">
-        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10 no-print">
+        <header className="h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 lg:px-12 sticky top-0 z-10 no-print shadow-sm">
           <div className="flex items-center space-x-4">
             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
@@ -109,29 +109,23 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <button onClick={() => setIsDesktopExpanded(!isDesktopExpanded)} className="hidden lg:block p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400">
               {isDesktopExpanded ? '❮' : '❯'}
             </button>
-            <div className="flex items-center space-x-2 px-3 py-1 bg-slate-50 dark:bg-slate-800 rounded-full border border-slate-100 dark:border-slate-700">
-               <div className={`w-2 h-2 rounded-full ${backendOffline ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
-               <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">
-                 {backendOffline ? 'Local Data' : 'Sync Active'}
-               </span>
-            </div>
           </div>
 
-          <div className="flex items-center space-x-3 lg:space-x-6">
+          <div className="flex items-center space-x-4 lg:space-x-8">
             <div className="relative group cursor-pointer" onClick={() => handleTabSelect(AdminTab.DASHBOARD)}>
-               <span className="text-xl">🔔</span>
+               <span className="text-2xl">🔔</span>
                {activeAlertCount > 0 && (
-                 <span className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white dark:border-slate-900">
+                 <span className="absolute -top-1.5 -right-1.5 h-6 w-6 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white dark:border-slate-900">
                    {activeAlertCount}
                  </span>
                )}
             </div>
-            <div className="h-8 w-px bg-slate-100 dark:bg-slate-800 hidden sm:block" />
-            <div className="flex items-center space-x-3">
+            <div className="h-10 w-px bg-slate-100 dark:bg-slate-800 hidden sm:block" />
+            <div className="flex items-center space-x-4">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-black text-slate-900 dark:text-white uppercase leading-none">{currentUser.name}</p>
+                <p className="text-2xl font-black text-slate-900 dark:text-white uppercase leading-none tracking-tight">{currentUser.name}</p>
               </div>
-              <img src={`https://picsum.photos/seed/${currentUser.id}/120/120`} className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl border-2 border-white dark:border-slate-800 shadow-sm" alt="Avatar" />
+              <img src={`https://picsum.photos/seed/${currentUser.id}/120/120`} className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl border-2 border-white dark:border-slate-800 shadow-md" alt="Avatar" />
             </div>
           </div>
         </header>

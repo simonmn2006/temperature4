@@ -35,7 +35,11 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
       const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                            u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (u.email || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Managers can only see/manage 'User' roles
       if (currentUser.role === 'Manager') return matchesSearch && u.role === 'User';
+      
+      // Admins and SuperAdmins can see everyone
       return matchesSearch;
     });
   }, [users, searchTerm, currentUser.role]);
@@ -199,7 +203,7 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                      <option value="User">User</option>
                      <option value="Manager">Manager</option>
                      <option value="Admin">Admin</option>
-                     {currentUser.role === 'SuperAdmin' && <option value="SuperAdmin">SuperAdmin</option>}
+                     {(currentUser.role === 'SuperAdmin' || editingUser?.role === 'SuperAdmin') && <option value="SuperAdmin">SuperAdmin</option>}
                   </select>
                 </div>
               </div>

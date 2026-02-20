@@ -171,7 +171,6 @@ export const UserDashboardLayout: React.FC<UserDashboardLayoutProps> = ({
           </div>
         </div>
         
-        {/* GROUPED NAVIGATION WITH LABELS */}
         <nav className="flex items-center bg-slate-100 dark:bg-slate-800/50 p-2 rounded-[2.5rem] shadow-inner">
           {navGroups.map((group, gIdx) => (
             <React.Fragment key={group.id}>
@@ -210,16 +209,16 @@ export const UserDashboardLayout: React.FC<UserDashboardLayoutProps> = ({
           ))}
         </nav>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-6">
           <div className="hidden sm:block text-right">
-             <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{currentUser.name}</p>
+             <p className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-tight">{currentUser.name}</p>
           </div>
           <button 
             onClick={onLogout}
-            className="flex items-center justify-center w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm group"
+            className="flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-600 hover:text-white transition-all shadow-sm group"
             title="Abmelden"
           >
-            <span className="text-xl group-hover:scale-110 transition-transform">🚪</span>
+            <span className="text-2xl group-hover:scale-110 transition-transform">🚪</span>
           </button>
         </div>
       </header>

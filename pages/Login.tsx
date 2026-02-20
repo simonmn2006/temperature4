@@ -4,7 +4,7 @@ import { TranslationSet, User } from '../types';
 
 interface LoginProps {
   t: TranslationSet;
-  onLogin: (username: string, password?: string, stayLoggedIn?: boolean, requestedView?: 'admin' | 'user') => void;
+  onLogin: (username: string, password?: string, stayLoggedIn?: boolean) => void;
   users: User[];
   legalTexts: { imprint: string; privacy: string };
   backendOffline?: boolean;
@@ -21,24 +21,40 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
   );
 
+  // Sync state if user changes permissions via browser settings
   useEffect(() => {
     if (typeof Notification === 'undefined') return;
     const interval = setInterval(() => {
       if (Notification.permission !== notifPermission) {
         setNotifPermission(Notification.permission);
       }
-    }, 1000);
+    }, 1500);
     return () => clearInterval(interval);
   }, [notifPermission]);
 
   const requestNotificationPermission = async () => {
-    if (!('Notification' in window)) {
-      alert("Dieses Gerät unterstützt keine Browser-Benachrichtigungen.");
+    if (typeof Notification === 'undefined') {
+      alert("Dieses Gerät oder dieser Browser unterstützt leider keine Push-Benachrichtigungen.");
       return;
     }
+
+    if (Notification.permission === 'denied') {
+      alert("Benachrichtigungen wurden blockiert. Bitte aktivieren Sie diese in Ihren Browser-Einstellungen.");
+      return;
+    }
+
     try {
       const permission = await Notification.requestPermission();
       setNotifPermission(permission);
+      
+      if (permission === 'granted') {
+        try {
+          new Notification("Gourmetta Central", {
+            body: "Push-Benachrichtigungen sind nun aktiv.",
+            icon: "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/flame.svg"
+          });
+        } catch (e) {}
+      }
     } catch (error) {
       console.error("Fehler beim Anfordern der Benachrichtigungsrechte:", error);
     }
@@ -46,21 +62,19 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Defaulting requestedView to undefined lets App.tsx handle logic based on database role
     onLogin(username.trim(), password.trim(), true);
   };
 
   const getStatusColor = () => {
-    if (notifPermission === 'granted') return 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-500/20';
-    if (notifPermission === 'denied') return 'bg-rose-50 text-rose-600 border-rose-100 shadow-rose-500/20';
-    return 'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-500/20';
+    if (notifPermission === 'granted') return 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-500/20 ring-4 ring-emerald-500/10';
+    if (notifPermission === 'denied') return 'bg-slate-100 text-slate-400 border-slate-200'; // Removed Pink (Rose)
+    return 'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-500/20 animate-pulse';
   };
 
   const accentColor = 'blue';
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4 relative overflow-hidden">
-      {/* Decorative Blobs */}
       <div className={`absolute -top-24 -left-24 w-96 h-96 bg-${accentColor}-100 rounded-full blur-3xl opacity-50 pointer-events-none transition-colors duration-1000`} />
       <div className={`absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50 pointer-events-none transition-colors duration-1000`} />
 
@@ -75,16 +89,17 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
         <div className="flex flex-col items-center mb-10 mt-4">
           <button 
             type="button"
+            title="Push-Alarme aktivieren"
             onClick={requestNotificationPermission}
-            className={`w-20 h-20 rounded-[2.25rem] flex items-center justify-center p-4 mb-6 border-2 transition-all group relative ${getStatusColor()} ${notifPermission === 'default' ? 'animate-bounce shadow-lg' : 'shadow-inner'}`}
+            className={`w-20 h-20 rounded-[2.25rem] flex items-center justify-center p-4 mb-6 border-2 transition-all group relative ${getStatusColor()} ${notifPermission === 'default' ? 'shadow-lg' : 'shadow-inner'}`}
           >
-             <img src={LOGO_URL} className="w-full h-full transition-all" alt="Logo" />
+             <img src={LOGO_URL} className={`w-full h-full transition-all ${notifPermission === 'granted' ? 'scale-90' : 'scale-100'}`} alt="Logo" />
              {notifPermission === 'granted' && (
-               <span className="absolute -bottom-1 -right-1 flex h-6 w-6 rounded-full bg-emerald-500 items-center justify-center text-[10px] text-white font-black border-2 border-white">✓</span>
+               <div className="absolute -bottom-2 -right-2 flex h-8 w-8 rounded-full bg-emerald-500 items-center justify-center text-white font-black border-4 border-white shadow-lg animate-in zoom-in">✓</div>
              )}
           </button>
           <h1 className="text-3xl font-black text-slate-900 italic tracking-tighter text-center">gourmetta</h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2 text-center">HCCP Central</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2 text-center">HCCP central</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -121,27 +136,14 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
 
           <div className="flex flex-col items-center space-y-4 pt-8 border-t border-slate-50">
              <div className="flex items-center space-x-4">
-                <button 
-                  type="button"
-                  onClick={() => setShowLegal('imprint')}
-                  className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors"
-                >
-                  Impressum
-                </button>
+                <button type="button" onClick={() => setShowLegal('imprint')} className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors">Impressum</button>
                 <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                <button 
-                  type="button"
-                  onClick={() => setShowLegal('privacy')}
-                  className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors"
-                >
-                  Datenschutz
-                </button>
+                <button type="button" onClick={() => setShowLegal('privacy')} className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors">Datenschutz</button>
              </div>
           </div>
         </form>
       </div>
 
-      {/* Legal Overlays */}
       {showLegal && (
         <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="bg-white rounded-[3.5rem] w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl border border-white/20 overflow-hidden text-left">
@@ -149,23 +151,13 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic">
                 {showLegal === 'imprint' ? 'Impressum' : 'Datenschutzerklärung'}
               </h2>
-              <button 
-                onClick={() => setShowLegal(null)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-200 text-slate-500 hover:bg-rose-500 hover:text-white transition-all font-bold"
-              >
-                ✕
-              </button>
+              <button onClick={() => setShowLegal(null)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-200 text-slate-500 hover:bg-rose-500 hover:text-white transition-all font-bold">✕</button>
             </div>
             <div className="flex-1 overflow-y-auto p-10 custom-scrollbar whitespace-pre-wrap font-medium text-slate-600 leading-relaxed text-sm">
               {showLegal === 'imprint' ? legalTexts.imprint : legalTexts.privacy}
             </div>
             <div className="p-8 border-t border-slate-50 text-center">
-               <button 
-                 onClick={() => setShowLegal(null)}
-                 className="px-10 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest"
-               >
-                 Verstanden
-               </button>
+               <button onClick={() => setShowLegal(null)} className="px-10 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">Verstanden</button>
             </div>
           </div>
         </div>
