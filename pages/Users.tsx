@@ -36,10 +36,10 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                            u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            (u.email || '').toLowerCase().includes(searchTerm.toLowerCase());
       
-      // Managers can only see/manage 'User' roles
+      // Managers only see standard users
       if (currentUser.role === 'Manager') return matchesSearch && u.role === 'User';
       
-      // Admins and SuperAdmins can see everyone (including SuperAdmins)
+      // SuperAdmins and Admins see everyone (including SuperAdmin)
       return matchesSearch;
     });
   }, [users, searchTerm, currentUser.role]);
@@ -62,15 +62,12 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
   };
 
   const isFieldDisabled = (fieldName: string) => {
-    // SuperAdmin can edit everything
     if (currentUser.role === 'SuperAdmin') return false; 
-    // Admin can edit everything except critical role elevations if we wanted to restrict it
     if (currentUser.role === 'Admin') return false; 
     if (currentUser.role === 'Manager') return !['name', 'password', 'email'].includes(fieldName);
     return true;
   };
 
-  // Added getFieldClass helper to handle validation styles and fix ReferenceError
   const getFieldClass = (fieldName: string) => {
     const base = "w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border font-bold text-sm outline-none transition-all";
     if (invalidFields.has(fieldName)) {
@@ -205,7 +202,6 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Anzeigename</label>
-                  {/* Applied getFieldClass fix */}
                   <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={getFieldClass('name')} />
                 </div>
                 <div>
@@ -238,12 +234,10 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
               <div className="grid grid-cols-2 gap-4">
                  <div>
                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Username</label>
-                   {/* Applied getFieldClass fix */}
                    <input type="text" disabled={isFieldDisabled('username')} value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className={getFieldClass('username')} />
                  </div>
                  <div>
                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Passwort</label>
-                   {/* Applied getFieldClass fix */}
                    <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={getFieldClass('password')} placeholder="Nur bei Änderung ausfüllen..." />
                  </div>
               </div>

@@ -21,7 +21,6 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
     typeof Notification !== 'undefined' ? Notification.permission : 'default'
   );
 
-  // Sync state if user changes permissions via browser settings
   useEffect(() => {
     if (typeof Notification === 'undefined') return;
     const interval = setInterval(() => {
@@ -34,29 +33,20 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
 
   const requestNotificationPermission = async () => {
     if (typeof Notification === 'undefined') {
-      alert("Dieses Gerät oder dieser Browser unterstützt leider keine Push-Benachrichtigungen.");
+      alert("Dieses Gerät unterstützt leider keine Push-Benachrichtigungen.");
       return;
     }
 
     if (Notification.permission === 'denied') {
-      alert("Benachrichtigungen wurden blockiert. Bitte aktivieren Sie diese in Ihren Browser-Einstellungen.");
+      alert("Benachrichtigungen wurden blockiert. Bitte in den Einstellungen aktivieren.");
       return;
     }
 
     try {
       const permission = await Notification.requestPermission();
       setNotifPermission(permission);
-      
-      if (permission === 'granted') {
-        try {
-          new Notification("Gourmetta Central", {
-            body: "Push-Benachrichtigungen sind nun aktiv.",
-            icon: "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/flame.svg"
-          });
-        } catch (e) {}
-      }
     } catch (error) {
-      console.error("Fehler beim Anfordern der Benachrichtigungsrechte:", error);
+      console.error("Notif Error:", error);
     }
   };
 
@@ -67,7 +57,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
 
   const getStatusColor = () => {
     if (notifPermission === 'granted') return 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-500/20 ring-4 ring-emerald-500/10';
-    if (notifPermission === 'denied') return 'bg-slate-100 text-slate-400 border-slate-200'; // Neutral instead of Pink/Rose
+    if (notifPermission === 'denied') return 'bg-slate-100 text-slate-400 border-slate-200';
     return 'bg-blue-50 text-blue-600 border-blue-100 shadow-blue-500/20 animate-pulse';
   };
 
@@ -75,8 +65,8 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 px-4 relative overflow-hidden">
-      <div className={`absolute -top-24 -left-24 w-96 h-96 bg-${accentColor}-100 rounded-full blur-3xl opacity-50 pointer-events-none transition-colors duration-1000`} />
-      <div className={`absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50 pointer-events-none transition-colors duration-1000`} />
+      <div className={`absolute -top-24 -left-24 w-96 h-96 bg-${accentColor}-100 rounded-full blur-3xl opacity-50 pointer-events-none`} />
+      <div className={`absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-100 rounded-full blur-3xl opacity-50 pointer-events-none`} />
 
       <div className="w-full max-w-[440px] bg-white rounded-[3.5rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] p-10 lg:p-12 border border-slate-100 relative z-10 text-left transition-all">
         {loginError && (
@@ -91,9 +81,9 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
             type="button"
             title="Push-Alarme aktivieren"
             onClick={requestNotificationPermission}
-            className={`w-20 h-20 rounded-[2.25rem] flex items-center justify-center p-4 mb-6 border-2 transition-all group relative ${getStatusColor()} ${notifPermission === 'default' ? 'shadow-lg' : 'shadow-inner'}`}
+            className={`w-20 h-20 rounded-[2.25rem] flex items-center justify-center p-4 mb-6 border-2 transition-all group relative ${getStatusColor()}`}
           >
-             <img src={LOGO_URL} className={`w-full h-full transition-all ${notifPermission === 'granted' ? 'scale-90' : 'scale-100'}`} alt="Logo" />
+             <img src={LOGO_URL} className="w-full h-full" alt="Logo" />
              {notifPermission === 'granted' && (
                <div className="absolute -bottom-2 -right-2 flex h-8 w-8 rounded-full bg-emerald-500 items-center justify-center text-white font-black border-4 border-white shadow-lg animate-in zoom-in">✓</div>
              )}
@@ -110,7 +100,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
                 type="text" 
                 value={username} 
                 onChange={e => setUsername(e.target.value)} 
-                className={`w-full px-6 py-5 rounded-2xl bg-slate-50 border font-bold outline-none focus:ring-4 focus:ring-${accentColor}-500/10 focus:bg-white transition-all text-lg ${loginError ? 'border-rose-300' : 'border-slate-200'}`} 
+                className={`w-full px-6 py-5 rounded-2xl bg-slate-50 border font-bold outline-none focus:ring-4 focus:ring-${accentColor}-500/10 focus:bg-white transition-all text-lg border-slate-200`} 
                 placeholder="Nutzername..." 
                 autoFocus
               />
@@ -121,7 +111,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
                 type="password" 
                 value={password} 
                 onChange={e => setPassword(e.target.value)} 
-                className={`w-full px-6 py-5 rounded-2xl bg-slate-50 border font-bold outline-none focus:ring-4 focus:ring-${accentColor}-500/10 focus:bg-white transition-all text-lg ${loginError ? 'border-rose-300' : 'border-slate-200'}`} 
+                className={`w-full px-6 py-5 rounded-2xl bg-slate-50 border font-bold outline-none focus:ring-4 focus:ring-${accentColor}-500/10 focus:bg-white transition-all text-lg border-slate-200`} 
                 placeholder="••••••••" 
               />
             </div>
@@ -145,13 +135,13 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
       </div>
 
       {showLegal && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-300">
           <div className="bg-white rounded-[3.5rem] w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl border border-white/20 overflow-hidden text-left">
             <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
               <h2 className="text-xl font-black text-slate-900 uppercase tracking-tighter italic">
                 {showLegal === 'imprint' ? 'Impressum' : 'Datenschutzerklärung'}
               </h2>
-              <button onClick={() => setShowLegal(null)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-200 text-slate-500 hover:bg-rose-500 hover:text-white transition-all font-bold">✕</button>
+              <button onClick={() => setShowLegal(null)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-200 text-slate-500 hover:bg-rose-500 transition-all font-bold">✕</button>
             </div>
             <div className="flex-1 overflow-y-auto p-10 custom-scrollbar whitespace-pre-wrap font-medium text-slate-600 leading-relaxed text-sm">
               {showLegal === 'imprint' ? legalTexts.imprint : legalTexts.privacy}
