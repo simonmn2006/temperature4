@@ -62,7 +62,7 @@ async function query(sql, params) {
     }
 }
 
-async function sendEmail(to: string, subject: string, text: string, html?: string) {
+async function sendEmail(to, subject, text, html) {
   try {
       const smtpSettings = await query('SELECT * FROM settings_smtp WHERE id = "GLOBAL"');
       if (!smtpSettings || smtpSettings.length === 0 || !smtpSettings[0].host || !smtpSettings[0].user || !smtpSettings[0].pass) {
@@ -78,7 +78,7 @@ async function sendEmail(to: string, subject: string, text: string, html?: strin
   }
 }
 
-async function sendTelegramMessage(message: string) {
+async function sendTelegramMessage(message) {
   try {
       const telegramSettings = await query('SELECT * FROM settings_telegram WHERE id = "GLOBAL"');
       if (!telegramSettings || telegramSettings.length === 0 || !telegramSettings[0].token || !telegramSettings[0].chatId) {
