@@ -241,8 +241,8 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                    <input type="text" disabled={isFieldDisabled('username')} value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className={getFieldClass('username')} />
                  </div>
                  <div>
-                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Passwort</label>
-                   <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={getFieldClass('password')} placeholder="Nur bei Änderung ausfüllen..." />
+                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Passwort (Nur zum Zurücksetzen)</label>
+                   <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={getFieldClass('password')} placeholder="Neues Passwort eingeben..." />
                  </div>
               </div>
 

@@ -65,6 +65,18 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
         { t: 'Das PDF öffnet sich sofort groß auf dem Bildschirm.', i: '📱' },
         { t: 'Schließe es mit dem X oben rechts, wenn du fertig bist.', i: '✕' }
       ]
+    },
+    {
+      title: 'PIN & Sicherheit',
+      icon: '🔑',
+      color: 'amber',
+      description: 'Dein Zugang zum Tresor:',
+      steps: [
+        { t: 'Wähle deinen Namen aus und lege eine 4-stellige PIN fest.', i: '🆕' },
+        { t: 'Merke dir die PIN gut! Du brauchst sie für alle Dokumente.', i: '🧠' },
+        { t: 'PIN vergessen? Tippe auf "PIN vergessen?" unter dem Eingabefeld.', i: '❓' },
+        { t: 'Die Verwaltung erhält eine Nachricht und setzt deine PIN zurück.', i: '📡' }
+      ]
     }
   ];
 

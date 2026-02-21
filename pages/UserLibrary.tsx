@@ -24,6 +24,13 @@ export const UserLibrary: React.FC<UserLibraryProps> = ({ t, documents }) => {
   const currentDocs = categories.find(c => c.id === activeTab)?.docs || [];
   const currentCategory = categories.find(c => c.id === activeTab)!;
 
+  const handlePrint = () => {
+    const iframe = document.querySelector('iframe');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.print();
+    }
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in duration-500 text-left pb-20">
       <header className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -108,21 +115,29 @@ export const UserLibrary: React.FC<UserLibraryProps> = ({ t, documents }) => {
 
       {activeDoc && (
         <div className="fixed inset-0 z-[2000] bg-slate-950/95 backdrop-blur-2xl flex flex-col p-2 md:p-6 animate-in zoom-in-95 duration-200">
-           <div className="flex justify-between items-center mb-4 px-6 text-white">
-              <div className="flex items-center gap-5">
-                 <span className="text-3xl">{activeDoc.category === 'hygiene' ? '🧼' : activeDoc.category === 'staff' ? '👤' : '🛡️'}</span>
-                 <div>
-                    <h2 className="text-xl font-black uppercase tracking-tighter leading-tight">{activeDoc.title}</h2>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Handbuch: {activeDoc.category}</p>
-                 </div>
-              </div>
-              <button 
-                onClick={() => setActiveDoc(null)} 
-                className="px-8 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-rose-600 transition-all flex items-center gap-3 border border-white/5"
-              >
-                <span>✕</span> <span>Verlassen</span>
-              </button>
-           </div>
+            <div className="flex justify-between items-center mb-4 px-6 text-white">
+               <div className="flex items-center gap-5">
+                  <span className="text-3xl">{activeDoc.category === 'hygiene' ? '🧼' : activeDoc.category === 'staff' ? '👤' : '🛡️'}</span>
+                  <div>
+                     <h2 className="text-xl font-black uppercase tracking-tighter leading-tight">{activeDoc.title}</h2>
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Handbuch: {activeDoc.category}</p>
+                  </div>
+               </div>
+               <div className="flex items-center gap-4">
+                  <button 
+                    onClick={handlePrint}
+                    className="px-8 py-4 bg-blue-600 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-blue-700 transition-all flex items-center gap-3 border border-blue-500/30 shadow-xl shadow-blue-600/20"
+                  >
+                    <span>🖨️</span> <span>Drucken</span>
+                  </button>
+                  <button 
+                    onClick={() => setActiveDoc(null)} 
+                    className="px-8 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-rose-600 transition-all flex items-center gap-3 border border-white/5"
+                  >
+                    <span>✕</span> <span>Verlassen</span>
+                  </button>
+               </div>
+            </div>
            <div className="flex-1 w-full bg-white rounded-[2.5rem] overflow-hidden shadow-2xl relative">
               <iframe 
                 src={activeDoc.content} 
