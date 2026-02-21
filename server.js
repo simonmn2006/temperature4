@@ -62,6 +62,39 @@ async function query(sql, params) {
     }
 }
 
+async function sendEmail(to: string, subject: string, text: string, html?: string) {
+  try {
+      const smtpSettings = await query('SELECT * FROM settings_smtp WHERE id = "GLOBAL"');
+      if (!smtpSettings || smtpSettings.length === 0 || !smtpSettings[0].host || !smtpSettings[0].user || !smtpSettings[0].pass) {
+          console.warn('SMTP settings not configured. Skipping email notification.');
+          return;
+      }
+      const { host, port, user, pass, from, secure } = smtpSettings[0];
+      const transporter = nodemailer.createTransport({ host, port: parseInt(port), secure: !!secure, auth: { user, pass } });
+      await transporter.sendMail({ from: from || user, to, subject, text, html });
+      console.log('Email sent successfully to', to);
+  } catch (error) {
+      console.error('Failed to send email:', error);
+  }
+}
+
+async function sendTelegramMessage(message: string) {
+  try {
+      const telegramSettings = await query('SELECT * FROM settings_telegram WHERE id = "GLOBAL"');
+      if (!telegramSettings || telegramSettings.length === 0 || !telegramSettings[0].token || !telegramSettings[0].chatId) {
+          console.warn('Telegram settings not configured. Skipping Telegram notification.');
+          return;
+      }
+      const { token, chatId } = telegramSettings[0];
+      const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'Markdown' }) });
+      const data = await response.json();
+      if (!data.ok) console.error('Failed to send Telegram message:', data.description);
+      else console.log('Telegram message sent successfully to', chatId);
+  } catch (error) {
+      console.error('Failed to send Telegram message:', error);
+  }
+}
+
 // Format for DATETIME columns: YYYY-MM-DD HH:mm:ss
 const formatSqlDateTime = (isoString) => {
     if (!isoString) return null;
@@ -175,6 +208,24 @@ app.post('/api/personnel', async (req, res) => {
 app.post('/api/personnel/:id/request-reset', async (req, res) => {
     try {
         await pool.query('UPDATE personnel SET pinResetRequested = TRUE WHERE id = ?', [req.params.id]);
+
+        const personnel = (await query('SELECT firstName, lastName, facilityIds FROM personnel WHERE id = ?', [req.params.id]))[0];
+        const facility = (await query('SELECT name FROM facilities WHERE id = ?', [personnel.facilityIds[0]]))[0];
+
+        const subject = `Gourmetta: PIN Reset Anfrage von ${personnel.firstName} ${personnel.lastName} (${facility.name})`;
+        const emailText = `Der Mitarbeiter ${personnel.firstName} ${personnel.lastName} von ${facility.name} hat einen PIN-Reset für den Dokumenten-Tresor angefordert. Bitte im Admin-Dashboard zurücksetzen.`;
+        const telegramMessage = `🚨 *PIN Reset Anfrage*
+
+*Mitarbeiter:* ${personnel.firstName} ${personnel.lastName}
+*Standort:* ${facility.name}
+
+Benötigt Unterstützung beim Zugriff auf den Dokumenten-Tresor. Bitte im Admin-Dashboard zurücksetzen.`;
+
+        // In a real application, you would fetch admin/manager emails/chat IDs here
+        // For now, we'll log and assume a global notification target.
+        sendEmail('admin@gourmetta.de', subject, emailText); // Replace with actual admin email
+        sendTelegramMessage(telegramMessage); // Replace with actual admin chat ID
+
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

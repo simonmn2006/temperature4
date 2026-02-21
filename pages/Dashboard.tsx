@@ -147,8 +147,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <div>
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <span className="text-[9px] font-black text-amber-600 uppercase tracking-[0.2em] block mb-1">Support-Anfrage</span>
-                      <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase leading-none">{p.firstName} {p.lastName}</h4>
+                      <span className="text-[9px] font-black text-amber-600 uppercase tracking-[0.2em] block mb-1">Support-Anfrage • {facilities.find(f => f.id === p.facilityIds[0])?.name || 'Unbekannter Standort'}</span>
+                      <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase leading-none">PIN-Reset: {p.firstName} {p.lastName}</h4>
                     </div>
                     <span className="text-2xl">🔑</span>
                   </div>
