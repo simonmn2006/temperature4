@@ -176,11 +176,13 @@ const App: React.FC = () => {
     ];
 
     const load = async () => {
-      for (const [_, key, setter] of endpoints) {
-        const cached = await getFromCache(key);
-        if (cached) setter(cached);
+      if (!isInitialLoadDone) {
+        for (const [_, key, setter] of endpoints) {
+          const cached = await getFromCache(key);
+          if (cached) setter(cached);
+        }
+        setIsInitialLoadDone(true);
       }
-      setIsInitialLoadDone(true);
       
       for (const [path, key, setter] of endpoints) {
         try {
@@ -199,7 +201,9 @@ const App: React.FC = () => {
       }
     };
     load();
-  }, []);
+    const interval = setInterval(load, 30000);
+    return () => clearInterval(interval);
+  }, [isInitialLoadDone]);
 
   const addToSyncQueue = useCallback(async (endpoint: string, data: any, method: string) => {
     try {

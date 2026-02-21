@@ -234,7 +234,15 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 text-left pb-20">
+    <div className="space-y-10 animate-in fade-in duration-500 text-left pb-20 relative">
+      {appAlert && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4">
+          <div className={`${appAlert.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'} text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center space-x-3`}>
+             <span className="text-xl">{appAlert.type === 'success' ? '✅' : '⚠️'}</span>
+             <span className="font-black text-xs uppercase tracking-widest">{appAlert.text}</span>
+          </div>
+        </div>
+      )}
       <header className="bg-white dark:bg-slate-900 p-10 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row justify-between items-center gap-8">
         <div className="flex-1">
           <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic leading-none mb-2">Dokumenten-Tresor</h1>
@@ -389,6 +397,7 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
                         const res = await fetch(`/api/personnel/${selectedPerson.id}/request-reset`, { method: 'POST' });
                         if (res.ok) {
                           showAppAlert(t.vault.resetSuccess, 'success');
+                          onPersonnelUpdate({ ...selectedPerson, pinResetRequested: true });
                         }
                       } catch (e) {
                         showAppAlert("Fehler beim Senden der Anfrage.", 'error');
