@@ -20,6 +20,7 @@ const DOC_TYPES: { type: PersonnelDocType; icon: string; label: string }[] = [
 export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personnel, personnelDocs, onUpload, onPersonnelUpdate, activeFacilityId }) => {
   const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [vaultError, setVaultError] = useState<string | null>(null);
@@ -47,36 +48,66 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
   }, [selectedPersonId]);
 
   const hashPin = async (rawPin: string) => {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(rawPin);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    try {
+      if (window.isSecureContext && crypto.subtle) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(rawPin);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {
+      console.error("Crypto error, falling back to simple hash", e);
+    }
+    // Fallback simple hash for non-secure contexts
+    let hash = 0;
+    for (let i = 0; i < rawPin.length; i++) {
+      const char = rawPin.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return "fallback-" + Math.abs(hash).toString(16);
   };
 
   const handleSetPin = async () => {
+    setVaultError(null);
     if (pin.length < 4) return;
     if (pin !== confirmPin) {
       setVaultError(t.vault.errorMismatch);
       return;
     }
-    const hashed = await hashPin(pin);
-    if (selectedPerson) {
-      const updatedPerson = { ...selectedPerson, vaultPin: hashed };
-      onPersonnelUpdate(updatedPerson);
-      setIsUnlocked(true);
+    setIsProcessing(true);
+    try {
+      const hashed = await hashPin(pin);
+      if (selectedPerson) {
+        const updatedPerson = { ...selectedPerson, vaultPin: hashed };
+        onPersonnelUpdate(updatedPerson);
+        setIsUnlocked(true);
+      }
+    } catch (err) {
+      setVaultError("Kritischer Fehler beim Verschlüsseln.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleUnlock = async () => {
+    setVaultError(null);
     if (!selectedPerson?.vaultPin) return;
-    const hashed = await hashPin(pin);
-    if (hashed === selectedPerson.vaultPin) {
-      setIsUnlocked(true);
-      setVaultError(null);
-    } else {
-      setVaultError(t.vault.errorWrong);
-      setPin('');
+    setIsProcessing(true);
+    try {
+      const hashed = await hashPin(pin);
+      if (hashed === selectedPerson.vaultPin) {
+        setIsUnlocked(true);
+        setVaultError(null);
+      } else {
+        setVaultError(t.vault.errorWrong);
+        setPin('');
+      }
+    } catch (err) {
+      setVaultError("Fehler beim Entsperren.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -334,10 +365,14 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
 
                 <button 
                   onClick={selectedPerson.vaultPin ? handleUnlock : handleSetPin}
-                  disabled={pin.length < 4 || (!selectedPerson.vaultPin && confirmPin.length < 4)}
-                  className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-30 disabled:grayscale transition-all active:scale-95"
+                  disabled={isProcessing || pin.length < 4 || (!selectedPerson.vaultPin && confirmPin.length < 4)}
+                  className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-30 disabled:grayscale transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
-                   {selectedPerson.vaultPin ? t.vault.unlock : t.vault.savePin}
+                   {isProcessing ? (
+                     <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                   ) : (
+                     selectedPerson.vaultPin ? t.vault.unlock : t.vault.savePin
+                   )}
                 </button>
 
                 {selectedPerson.vaultPin && (
