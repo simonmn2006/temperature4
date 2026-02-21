@@ -39,6 +39,8 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
   
   const [formError, setFormError] = useState<string | null>(null);
   const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
+  const [notification, setNotification] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ text: string, onConfirm: () => void } | null>(null);
 
   const [formData, setFormData] = useState<Partial<Personnel>>({
     firstName: '',
@@ -168,19 +170,31 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
     setIsModalOpen(false);
   };
 
+  const showNotification = (text: string, type: 'success' | 'error' = 'success') => {
+    setNotification({ text, type });
+    setTimeout(() => setNotification(null), 4000);
+  };
+
   const handleResetPin = async (personId: string) => {
-    if (!confirm(t.vault.adminReset + "?")) return;
-    try {
-      const res = await fetch(`http://${window.location.hostname}:3001/api/personnel/${personId}/reset-pin`, {
-        method: 'POST'
-      });
-      if (res.ok) {
-        setPersonnel(prev => prev.map(p => p.id === personId ? { ...p, vaultPin: undefined } : p));
-        alert("PIN erfolgreich zurückgesetzt.");
+    setConfirmAction({
+      text: t.vault.adminReset + "?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/personnel/${personId}/reset-pin`, {
+            method: 'POST'
+          });
+          if (res.ok) {
+            setPersonnel(prev => prev.map(p => p.id === personId ? { ...p, vaultPin: undefined, pinResetRequested: false } : p));
+            showNotification("PIN erfolgreich zurückgesetzt.", 'success');
+          } else {
+            showNotification("Fehler beim Zurücksetzen der PIN.", 'error');
+          }
+        } catch (e) {
+          showNotification("Netzwerkfehler beim Zurücksetzen.", 'error');
+        }
+        setConfirmAction(null);
       }
-    } catch (e) {
-      alert("Fehler beim Zurücksetzen der PIN.");
-    }
+    });
   };
 
   const handleAdminFileUpload = (e: React.ChangeEvent<HTMLInputElement>, personnelId: string, type: PersonnelDocType) => {
@@ -235,7 +249,29 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 text-left pb-20">
+    <div className="p-4 md:p-12 max-w-7xl mx-auto pb-32 animate-in fade-in duration-700 relative">
+      {notification && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] animate-in slide-in-from-top-4">
+          <div className={`${notification.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'} text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center space-x-3`}>
+             <span className="text-xl">{notification.type === 'success' ? '✅' : '⚠️'}</span>
+             <span className="font-black text-xs uppercase tracking-widest">{notification.text}</span>
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-[110] animate-in fade-in">
+           <div className="bg-white dark:bg-slate-900 p-10 rounded-[3rem] shadow-2xl max-w-md w-full text-center border border-slate-100 dark:border-slate-800">
+              <div className="w-20 h-20 bg-amber-50 dark:bg-amber-900/30 text-amber-600 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-inner">❓</div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic mb-4">{confirmAction.text}</h3>
+              <div className="flex gap-4 mt-8">
+                 <button onClick={() => setConfirmAction(null)} className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-all">Abbrechen</button>
+                 <button onClick={confirmAction.onConfirm} className="flex-1 py-4 bg-amber-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-amber-600/20 hover:bg-amber-700 transition-all">Bestätigen</button>
+              </div>
+           </div>
+        </div>
+      )}
+
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm">
         <div>
           <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Personal & Compliance</h1>

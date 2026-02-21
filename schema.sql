@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS personnel (
     requiredDocs JSON,
     status ENUM('Active', 'Inactive') DEFAULT 'Active',
     vaultPin VARCHAR(255),
-    isSpringer BOOLEAN DEFAULT FALSE
+    isSpringer BOOLEAN DEFAULT FALSE,
+    pinResetRequested BOOLEAN DEFAULT FALSE
 );
 
 -- Table for personnel compliance documents

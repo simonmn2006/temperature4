@@ -41,6 +41,7 @@ export interface Personnel {
   status: 'Active' | 'Inactive';
   vaultPin?: string; // Hashed PIN for document access
   isSpringer?: boolean; // If true, visible in all facilities
+  pinResetRequested?: boolean; // If true, admin sees an alert
 }
 
 export interface PersonnelDocument {

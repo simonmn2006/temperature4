@@ -217,7 +217,7 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                      <option value="User">Standard-User</option>
                      <option value="Manager">Manager</option>
                      <option value="Admin">Administrator</option>
-                     {(currentUser.role === 'SuperAdmin') && <option value="SuperAdmin">SuperAdmin</option>}
+                     {(currentUser.role === 'SuperAdmin' || currentUser.role === 'Admin') && <option value="SuperAdmin">SuperAdmin</option>}
                   </select>
                 </div>
               </div>

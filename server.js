@@ -4,12 +4,18 @@ import mariadb from 'mariadb';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
+import { createServer as createViteServer } from 'vite';
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+const PORT = 3000;
+async function startServer() {
+    app.use(cors());
+    app.use(express.json({ limit: '50mb' }));
+
+    // API routes FIRST
+    // ... (all app.get/post/delete routes)
 
 // Increased connection timeout and added basic error listener
 const pool = mariadb.createPool({
@@ -159,16 +165,23 @@ app.delete('/api/documents/:id', (req, res) => query('DELETE FROM documents WHER
 
 app.get('/api/personnel', (req, res) => query('SELECT * FROM personnel').then(r => res.json(r || [])));
 app.post('/api/personnel', async (req, res) => {
-    const { id, firstName, lastName, facilityIds, requiredDocs, status, vaultPin, isSpringer } = req.body;
+    const { id, firstName, lastName, facilityIds, requiredDocs, status, vaultPin, isSpringer, pinResetRequested } = req.body;
     try {
-        await pool.query('INSERT INTO personnel (id, firstName, lastName, facilityIds, requiredDocs, status, vaultPin, isSpringer) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE firstName=VALUES(firstName), lastName=VALUES(lastName), facilityIds=VALUES(facilityIds), requiredDocs=VALUES(requiredDocs), status=VALUES(status), vaultPin=IFNULL(VALUES(vaultPin), vaultPin), isSpringer=VALUES(isSpringer)', [id, firstName, lastName, JSON.stringify(facilityIds), JSON.stringify(requiredDocs), status || 'Active', vaultPin || null, !!isSpringer]);
+        await pool.query('INSERT INTO personnel (id, firstName, lastName, facilityIds, requiredDocs, status, vaultPin, isSpringer, pinResetRequested) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE firstName=VALUES(firstName), lastName=VALUES(lastName), facilityIds=VALUES(facilityIds), requiredDocs=VALUES(requiredDocs), status=VALUES(status), vaultPin=IFNULL(VALUES(vaultPin), vaultPin), isSpringer=VALUES(isSpringer), pinResetRequested=VALUES(pinResetRequested)', [id, firstName, lastName, JSON.stringify(facilityIds), JSON.stringify(requiredDocs), status || 'Active', vaultPin || null, !!isSpringer, !!pinResetRequested]);
+        res.sendStatus(200);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/personnel/:id/request-reset', async (req, res) => {
+    try {
+        await pool.query('UPDATE personnel SET pinResetRequested = TRUE WHERE id = ?', [req.params.id]);
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/personnel/:id/reset-pin', async (req, res) => {
     try {
-        await pool.query('UPDATE personnel SET vaultPin = NULL WHERE id = ?', [req.params.id]);
+        await pool.query('UPDATE personnel SET vaultPin = NULL, pinResetRequested = FALSE WHERE id = ?', [req.params.id]);
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -405,29 +418,43 @@ app.post('/api/test-telegram', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, async () => {
-    console.log(`🚀 HACCP Server fully operational on port ${PORT}`);
-    console.log(`📡 Connecting to MariaDB at ${process.env.DB_HOST || '127.0.0.1'}...`);
-    try {
-        // Run sanity check on DB connection during startup
-        const testConn = await pool.getConnection();
-        console.log("✅ MariaDB Connection Verified!");
-        
-        await testConn.query(`INSERT IGNORE INTO settings_smtp (id, host, port, secure) VALUES ('GLOBAL', 'smtp.strato.de', 465, 1)`);
-        await testConn.query(`INSERT IGNORE INTO settings_telegram (id, token, chatId) VALUES ('GLOBAL', '', '')`);
-        
-        // Detailed German GDPR Policy for internal enterprise use
-        const privacyText = `DATENSCHUTZERKLÄRUNG (DSGVO)\n\n1. Verantwortlicher\nVerantwortlich für die Datenverarbeitung in dieser Anwendung ist die Gourmetta GmbH (Anschrift siehe Impressum).\n\n2. Zweck und Rechtsgrundlage der Verarbeitung\na) Erfüllung gesetzlicher Dokumentationspflichten (HACCP): Wir verarbeiten Ihre Messdaten zur Einhaltung lebensmittelrechtlicher Vorschriften gemäß Art. 6 Abs. 1 lit. c DSGVO.\nb) Personalverwaltung: Die Verarbeitung von Personaldaten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Arbeitsverhältnis).\nc) Gesundheitsdaten: Die Verarbeitung von Gesundheitszeugnissen erfolgt gemäß Art. 9 Abs. 2 lit. b DSGVO i.V.m. dem Infektionsschutzgesetz.\n\n3. Speicherdauer\nDaten werden gemäß den gesetzlichen Aufbewahrungsfristen (i.d.R. 2 Jahre für HACCP-Logs) gespeichert.`;
-        const imprintText = `Gourmetta GmbH\nHauptstraße 1\n01234 Beispielstadt\n\nGeschäftsführung: Max Mustermann`;
-
-        await testConn.query(`INSERT IGNORE INTO settings_legal (id, imprint, privacy) VALUES ("GLOBAL", ?, ?) ON DUPLICATE KEY UPDATE privacy=VALUES(privacy)`, [imprintText, privacyText]);
-        
-        await testConn.query(`INSERT IGNORE INTO environmental_impact (id, pagesSaved, tonerSaved) VALUES ('GLOBAL', 0, 0.0)`);
-        testConn.release();
-    } catch (e) { 
-        console.error("⚠️ SYSTEM WARNING: Database initialization failed.");
-        console.error("Please verify MariaDB is running and .env credentials are correct.");
-        console.error("Technical detail:", e.message);
+    // Vite middleware for development
+    if (process.env.NODE_ENV !== 'production') {
+        const vite = await createViteServer({
+            server: { middlewareMode: true },
+            appType: 'spa',
+        });
+        app.use(vite.middlewares);
+    } else {
+        app.use(express.static('dist'));
+        app.get('*', (req, res) => res.sendFile('dist/index.html', { root: '.' }));
     }
-});
+
+    app.listen(PORT, async () => {
+        console.log(`🚀 HACCP Server fully operational on port ${PORT}`);
+        console.log(`📡 Connecting to MariaDB at ${process.env.DB_HOST || '127.0.0.1'}...`);
+        try {
+            // Run sanity check on DB connection during startup
+            const testConn = await pool.getConnection();
+            console.log("✅ MariaDB Connection Verified!");
+            
+            await testConn.query(`INSERT IGNORE INTO settings_smtp (id, host, port, secure) VALUES ('GLOBAL', 'smtp.strato.de', 465, 1)`);
+            await testConn.query(`INSERT IGNORE INTO settings_telegram (id, token, chatId) VALUES ('GLOBAL', '', '')`);
+            
+            // Detailed German GDPR Policy for internal enterprise use
+            const privacyText = `DATENSCHUTZERKLÄRUNG (DSGVO)\n\n1. Verantwortlicher\nVerantwortlich für die Datenverarbeitung in dieser Anwendung ist die Gourmetta GmbH (Anschrift siehe Impressum).\n\n2. Zweck und Rechtsgrundlage der Verarbeitung\na) Erfüllung gesetzlicher Dokumentationspflichten (HACCP): Wir verarbeiten Ihre Messdaten zur Einhaltung lebensmittelrechtlicher Vorschriften gemäß Art. 6 Abs. 1 lit. c DSGVO.\nb) Personalverwaltung: Die Verarbeitung von Personaldaten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b DSGVO (Arbeitsverhältnis).\nc) Gesundheitsdaten: Die Verarbeitung von Gesundheitszeugnissen erfolgt gemäß Art. 9 Abs. 2 lit. b DSGVO i.V.m. dem Infektionsschutzgesetz.\n\n3. Speicherdauer\nDaten werden gemäß den gesetzlichen Aufbewahrungsfristen (i.d.R. 2 Jahre für HACCP-Logs) gespeichert.`;
+            const imprintText = `Gourmetta GmbH\nHauptstraße 1\n01234 Beispielstadt\n\nGeschäftsführung: Max Mustermann`;
+
+            await testConn.query(`INSERT IGNORE INTO settings_legal (id, imprint, privacy) VALUES ("GLOBAL", ?, ?) ON DUPLICATE KEY UPDATE privacy=VALUES(privacy)`, [imprintText, privacyText]);
+            
+            await testConn.query(`INSERT IGNORE INTO environmental_impact (id, pagesSaved, tonerSaved) VALUES ('GLOBAL', 0, 0.0)`);
+            testConn.release();
+        } catch (e) { 
+            console.error("⚠️ SYSTEM WARNING: Database initialization failed.");
+            console.error("Please verify MariaDB is running and .env credentials are correct.");
+            console.error("Technical detail:", e.message);
+        }
+    });
+}
+
+startServer();

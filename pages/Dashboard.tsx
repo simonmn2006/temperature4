@@ -1,24 +1,27 @@
 
 import React from 'react';
-import { TranslationSet, User, Facility, Refrigerator, Alert } from '../types';
+import { TranslationSet, User, Facility, Refrigerator, Alert, Personnel } from '../types';
 
 interface DashboardPageProps {
   t: TranslationSet;
   currentUser: User;
   users: User[];
+  personnel: Personnel[];
   facilities: Facility[];
   fridges: Refrigerator[];
   alerts: Alert[];
   setAlerts: React.Dispatch<React.SetStateAction<Alert[]>>;
   impactStats: { pagesSaved: number; tonerSaved: number } | null;
   onSyncAlert: (alert: Alert) => void;
+  onNavigateToPersonnel: (personId: string) => void;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({ 
-  t, currentUser, users, facilities, fridges, alerts, setAlerts, impactStats, onSyncAlert 
+  t, currentUser, users, personnel, facilities, fridges, alerts, setAlerts, impactStats, onSyncAlert, onNavigateToPersonnel
 }) => {
   const activeAlerts = (alerts || []).filter(a => !a.resolved);
-  const activeAlertCount = activeAlerts.length;
+  const pinResetRequests = (personnel || []).filter(p => p.pinResetRequested);
+  const activeAlertCount = activeAlerts.length + pinResetRequests.length;
 
   const stats = [
     { label: 'Benutzer Gesamt', value: (users || []).length, icon: '👥', color: 'text-blue-600', bg: 'bg-blue-50' },
@@ -124,8 +127,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="space-y-6">
         <div className="flex items-center justify-between px-2">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight italic">Dringende Alarme</h2>
-            <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Kritische Grenzwert-Abweichungen</p>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight italic">Dringende Benachrichtigungen</h2>
+            <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">Kritische Abweichungen & Support-Anfragen</p>
           </div>
           {activeAlertCount > 0 && (
             <button 
@@ -139,6 +142,27 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {activeAlertCount > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pinResetRequests.map(p => (
+              <div key={p.id} className="bg-amber-50 dark:bg-amber-900/20 rounded-[2.5rem] p-8 border border-amber-100 dark:border-amber-800/30 flex flex-col justify-between animate-in slide-in-from-left-4">
+                <div>
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <span className="text-[9px] font-black text-amber-600 uppercase tracking-[0.2em] block mb-1">Support-Anfrage</span>
+                      <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase leading-none">{p.firstName} {p.lastName}</h4>
+                    </div>
+                    <span className="text-2xl">🔑</span>
+                  </div>
+                  <p className="text-xs font-bold text-amber-800 dark:text-amber-200 uppercase tracking-widest mb-8">Benötigt Unterstützung beim Zugriff auf den Dokumenten-Tresor.</p>
+                </div>
+                <button 
+                  onClick={() => onNavigateToPersonnel(p.id)}
+                  className="w-full py-4 bg-amber-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-amber-600/20 hover:bg-amber-700 transition-all"
+                >
+                  Zum Mitarbeiter-Profil
+                </button>
+              </div>
+            ))}
+
             {activeAlerts.map((alert) => (
               <div key={alert.id} className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 animate-alert-flash flex flex-col justify-between group">
                 <div>

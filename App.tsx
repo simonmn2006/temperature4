@@ -27,7 +27,7 @@ import { UserAcademy } from './pages/UserAcademy';
 import { PersonnelPage } from './pages/Personnel';
 import { UserPersonnelDocs } from './pages/UserPersonnelDocs';
 
-const API_BASE = `http://${window.location.hostname || 'localhost'}:3001/api`;
+const API_BASE = '/api';
 
 const openDB = () => {
   return new Promise<IDBDatabase>((resolve, reject) => {
@@ -369,7 +369,7 @@ const App: React.FC = () => {
            activeTab === AdminTab.BACKUP_SYNC ? <BackupSyncPage t={t} users={users} setUsers={setUsers} facilities={facilities} setFacilities={setFacilities} currentUser={currentUser} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} facilityTypes={facilityTypes} cookingMethods={cookingMethods} /> :
            activeTab === AdminTab.AUDIT_LOGS ? <AuditLogsPage t={t} logs={auditLogs} /> :
            activeTab === AdminTab.SETTINGS ? <SettingsPage t={t} facilities={facilities} fridgeTypes={fridgeTypes} setFridgeTypes={setFridgeTypes} cookingMethods={cookingMethods} setCookingMethods={setCookingMethods} facilityTypes={facilityTypes} setFacilityTypes={setFacilityTypes} holidays={holidays} setHolidays={setHolidays} excludedFacilities={excludedFacilities} setExcludedFacilities={setExcludedFacilities} legalTexts={legalTexts} setLegalTexts={setLegalTexts} onSyncHoliday={h => sync('settings/holidays', h)} onSyncFridgeType={ft => sync('settings/fridge-types', ft)} onSyncCooking={cm => sync('settings/cooking-methods', cm)} onSyncFacilityType={ft => sync('settings/facility-types', ft)} onSyncException={ex => sync('settings/exceptions', ex)} onSyncExceptionDelete={id => sync('settings/exceptions', id, 'DELETE')} onSyncLegal={l => sync('settings/legal', l)} /> :
-           <DashboardPage t={t} currentUser={currentUser} users={users} facilities={facilities} fridges={fridges} alerts={alerts} setAlerts={setAlerts} impactStats={impactStats} onSyncAlert={a => sync('alerts', a)} />
+           <DashboardPage t={t} currentUser={currentUser} users={users} personnel={personnel} facilities={facilities} fridges={fridges} alerts={alerts} setAlerts={setAlerts} impactStats={impactStats} onSyncAlert={a => sync('alerts', a)} onNavigateToPersonnel={(id) => { setActiveTab(AdminTab.PERSONNEL); }} />
           }
         </DashboardLayout>
       ) : (

@@ -28,6 +28,7 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
   const [cameraType, setCameraType] = useState<PersonnelDocType | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [viewingDoc, setViewingDoc] = useState<PersonnelDocument | null>(null);
+  const [appAlert, setAppAlert] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -69,6 +70,11 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
     return "fallback-" + Math.abs(hash).toString(16);
   };
 
+  const showAppAlert = (text: string, type: 'success' | 'error' = 'success') => {
+    setAppAlert({ text, type });
+    setTimeout(() => setAppAlert(null), 4000);
+  };
+
   const handleSetPin = async () => {
     setVaultError(null);
     if (pin.length < 4) return;
@@ -83,6 +89,7 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
         const updatedPerson = { ...selectedPerson, vaultPin: hashed };
         onPersonnelUpdate(updatedPerson);
         setIsUnlocked(true);
+        showAppAlert("PIN erfolgreich gespeichert!", 'success');
       }
     } catch (err) {
       setVaultError("Kritischer Fehler beim Verschlüsseln.");
@@ -377,7 +384,16 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
 
                 {selectedPerson.vaultPin && (
                   <button 
-                    onClick={() => alert(t.vault.resetSuccess)}
+                    onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/personnel/${selectedPerson.id}/request-reset`, { method: 'POST' });
+                        if (res.ok) {
+                          showAppAlert(t.vault.resetSuccess, 'success');
+                        }
+                      } catch (e) {
+                        showAppAlert("Fehler beim Senden der Anfrage.", 'error');
+                      }
+                    }}
                     className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-blue-600 transition-colors mt-4"
                   >
                     {t.vault.resetRequest}
