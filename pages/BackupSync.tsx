@@ -29,7 +29,7 @@ interface BackupSyncPageProps {
   cookingMethods: CookingMethod[];
 }
 
-const API_BASE = `http://${window.location.hostname || 'localhost'}:3001/api`;
+const API_BASE = '/api';
 
 export const BackupSyncPage: React.FC<BackupSyncPageProps> = ({ 
   t, users, setUsers, facilities, setFacilities, currentUser, onLog, facilityTypes, cookingMethods 

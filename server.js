@@ -453,8 +453,19 @@ app.get('/api/impact-stats', (req, res) => query('SELECT * FROM environmental_im
 app.post('/api/test-email', async (req, res) => {
     const { host, port, user, pass, from, secure, testRecipient } = req.body;
     try {
-        const transporter = nodemailer.createTransport({ host, port: parseInt(port), secure: parseInt(port) === 465, auth: { user, pass } });
-        await transporter.sendMail({ from: from || user, to: testRecipient || user, subject: 'Gourmetta System-Test', text: 'Die SMTP-Konfiguration ist korrekt.' });
+        const isSecure = secure !== undefined ? !!secure : parseInt(port) === 465;
+        const transporter = nodemailer.createTransport({ 
+            host, 
+            port: parseInt(port), 
+            secure: isSecure, 
+            auth: { user, pass } 
+        });
+        await transporter.sendMail({ 
+            from: from || user, 
+            to: testRecipient || user, 
+            subject: 'Gourmetta System-Test', 
+            text: 'Die SMTP-Konfiguration ist korrekt.' 
+        });
         res.json({ success: true });
     } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 });
