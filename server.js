@@ -209,25 +209,31 @@ app.post('/api/personnel/:id/request-reset', async (req, res) => {
     try {
         await pool.query('UPDATE personnel SET pinResetRequested = TRUE WHERE id = ?', [req.params.id]);
 
-        const personnel = (await query('SELECT firstName, lastName, facilityIds FROM personnel WHERE id = ?', [req.params.id]))[0];
-        const facility = (await query('SELECT name FROM facilities WHERE id = ?', [personnel.facilityIds[0]]))[0];
+        const personnelRows = await query('SELECT firstName, lastName, facilityIds FROM personnel WHERE id = ?', [req.params.id]);
+        if (!personnelRows || personnelRows.length === 0) {
+            return res.status(404).json({ error: "Personal nicht gefunden" });
+        }
+        
+        const personnel = personnelRows[0];
+        const facilityIds = Array.isArray(personnel.facilityIds) ? personnel.facilityIds : [];
+        const facilityId = facilityIds[0] || 'UNKNOWN';
+        
+        const facilityRows = await query('SELECT name FROM facilities WHERE id = ?', [facilityId]);
+        const facilityName = facilityRows?.[0]?.name || 'Unbekannter Standort';
 
-        const subject = `Gourmetta: PIN Reset Anfrage von ${personnel.firstName} ${personnel.lastName} (${facility.name})`;
-        const emailText = `Der Mitarbeiter ${personnel.firstName} ${personnel.lastName} von ${facility.name} hat einen PIN-Reset für den Dokumenten-Tresor angefordert. Bitte im Admin-Dashboard zurücksetzen.`;
-        const telegramMessage = `🚨 *PIN Reset Anfrage*
+        const subject = `Gourmetta: PIN Reset Anfrage von ${personnel.firstName} ${personnel.lastName} (${facilityName})`;
+        const emailText = `Der Mitarbeiter ${personnel.firstName} ${personnel.lastName} von ${facilityName} hat einen PIN-Reset für den Dokumenten-Tresor angefordert. Bitte im Admin-Dashboard zurücksetzen.`;
+        const telegramMessage = `🚨 *PIN Reset Anfrage*\n\n*Mitarbeiter:* ${personnel.firstName} ${personnel.lastName}\n*Standort:* ${facilityName}\n\nBenötigt Unterstützung beim Zugriff auf den Dokumenten-Tresor. Bitte im Admin-Dashboard zurücksetzen.`;
 
-*Mitarbeiter:* ${personnel.firstName} ${personnel.lastName}
-*Standort:* ${facility.name}
-
-Benötigt Unterstützung beim Zugriff auf den Dokumenten-Tresor. Bitte im Admin-Dashboard zurücksetzen.`;
-
-        // In a real application, you would fetch admin/manager emails/chat IDs here
-        // For now, we'll log and assume a global notification target.
-        sendEmail('admin@gourmetta.de', subject, emailText); // Replace with actual admin email
-        sendTelegramMessage(telegramMessage); // Replace with actual admin chat ID
+        // Dispatch notifications
+        sendEmail('admin@gourmetta.de', subject, emailText); 
+        sendTelegramMessage(telegramMessage);
 
         res.sendStatus(200);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    } catch (err) { 
+        console.error("PIN Reset Request Error:", err);
+        res.status(500).json({ error: err.message }); 
+    }
 });
 
 app.post('/api/personnel/:id/reset-pin', async (req, res) => {

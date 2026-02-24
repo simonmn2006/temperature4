@@ -157,7 +157,8 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
       requiredDocs: formData.requiredDocs || [],
       status: formData.status || 'Active',
       vaultPin: editingPerson?.vaultPin, // Preserve PIN on edit
-      isSpringer: !!formData.isSpringer
+      isSpringer: !!formData.isSpringer,
+      pinResetRequested: editingPerson?.pinResetRequested // Preserve reset request status
     };
 
     if (editingPerson) {
@@ -346,8 +347,15 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
         {filteredPersonnel.map(p => (
           <div key={p.id} className={`bg-white dark:bg-slate-900 p-8 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-2xl transition-all group relative overflow-hidden ${p.status === 'Inactive' ? 'opacity-60 grayscale' : ''}`}>
              <div className="flex justify-between items-start mb-6">
-                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner group-hover:scale-110 transition-transform">
-                  {p.status === 'Active' ? '👨‍💼' : '🌑'}
+                <div className="relative">
+                  <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner group-hover:scale-110 transition-transform">
+                    {p.status === 'Active' ? '👨‍💼' : '🌑'}
+                  </div>
+                  {p.pinResetRequested && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white dark:border-slate-900 animate-pulse shadow-lg" title="PIN Reset angefordert">
+                      🔑
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2">
                    <button onClick={() => setViewingDocsPerson(p)} className="p-3 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl hover:scale-110 transition-transform shadow-sm" title="Dokumente prüfen">👁️</button>
@@ -364,6 +372,14 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                  )}
                  {p.isSpringer && (
                    <span className="px-3 py-1 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase border border-blue-700 shadow-sm">Springer</span>
+                 )}
+                 {p.pinResetRequested && (
+                   <button 
+                     onClick={() => handleResetPin(p.id)}
+                     className="px-3 py-1 bg-rose-600 text-white rounded-xl text-[9px] font-black uppercase border border-rose-700 shadow-lg animate-bounce hover:bg-rose-700 transition-colors"
+                   >
+                     ⚠️ PIN RESET JETZT
+                   </button>
                  )}
                </div>
              </div>
