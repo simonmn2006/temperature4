@@ -186,6 +186,11 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
           });
           if (res.ok) {
             setPersonnel(prev => prev.map(p => p.id === personId ? { ...p, vaultPin: undefined, pinResetRequested: false } : p));
+            if (editingPerson?.id === personId) {
+              const updated = { ...editingPerson, vaultPin: undefined, pinResetRequested: false };
+              setEditingPerson(updated);
+              setFormData(prev => ({ ...prev, vaultPin: undefined, pinResetRequested: false }));
+            }
             showNotification("PIN erfolgreich zurückgesetzt.", 'success');
           } else {
             showNotification("Fehler beim Zurücksetzen der PIN.", 'error');
@@ -351,7 +356,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                   <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-4xl shadow-inner group-hover:scale-110 transition-transform">
                     {p.status === 'Active' ? '👨‍💼' : '🌑'}
                   </div>
-                  {p.pinResetRequested && (
+                  {!!p.pinResetRequested && (
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white dark:border-slate-900 animate-pulse shadow-lg" title="PIN Reset angefordert">
                       🔑
                     </div>
@@ -370,10 +375,10 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                  {p.status === 'Inactive' && (
                    <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-slate-200">Personal Inaktiv</span>
                  )}
-                 {p.isSpringer && (
+                 {!!p.isSpringer && (
                    <span className="px-3 py-1 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase border border-blue-700 shadow-sm">Springer</span>
                  )}
-                 {p.pinResetRequested && (
+                 {!!p.pinResetRequested && (
                    <button 
                      onClick={() => handleResetPin(p.id)}
                      className="px-3 py-1 bg-rose-600 text-white rounded-xl text-[9px] font-black uppercase border border-rose-700 shadow-lg animate-bounce hover:bg-rose-700 transition-colors"
