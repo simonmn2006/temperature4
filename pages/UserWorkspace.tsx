@@ -34,6 +34,7 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
   const [draftTemps, setDraftTemps] = useState<Record<string, string>>({});
   const [draftReasons, setDraftReasons] = useState<Record<string, string>>({});
   const [lockingIds, setLockingIds] = useState<Set<string>>(new Set());
+  const [facilityImpact, setFacilityImpact] = useState<{ pagesSaved: number; tonerSaved: number }>({ pagesSaved: 0, tonerSaved: 0 });
 
   // Site Switching logic for Managers
   const availableFacilityIds = useMemo(() => {
@@ -49,6 +50,15 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (activeFacilityId) {
+      fetch(`/api/impact-stats/${activeFacilityId}`)
+        .then(res => res.json())
+        .then(data => setFacilityImpact(data))
+        .catch(console.error);
+    }
+  }, [activeFacilityId, formResponses]); // Re-fetch when facility changes or a form is submitted (formResponses update)
 
   const todayStr = useMemo(() => {
     const y = now.getFullYear();
@@ -306,6 +316,34 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2">Alle Messungen für diesen Standort wurden erfasst.</p>
           </div>
         )}
+      </div>
+
+      {/* Gourmetta Go Green Section for Facility */}
+      <div className="bg-slate-900 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl mt-12">
+         <div className="absolute top-0 right-0 w-1/2 h-full bg-emerald-500/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2" />
+         
+         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-left">
+               <div className="flex items-center space-x-4 mb-4">
+                  <span className="text-3xl">🌱</span>
+                  <h2 className="text-2xl font-black italic tracking-tighter uppercase">gourmetta go green</h2>
+               </div>
+               <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-md">
+                  Ihre Arbeit an diesem Standort schützt die Umwelt. Durch digitale Dokumentation sparen wir gemeinsam wertvolle Ressourcen.
+               </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
+               <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2rem] text-center min-w-[160px]">
+                  <h4 className="text-3xl font-black text-emerald-400 mb-1">{facilityImpact.pagesSaved.toLocaleString()}</h4>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Eingesparte Seiten</p>
+               </div>
+               <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2rem] text-center min-w-[160px]">
+                  <h4 className="text-3xl font-black text-blue-400 mb-1">{Math.floor(facilityImpact.tonerSaved)}</h4>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gesparte Kartuschen</p>
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );

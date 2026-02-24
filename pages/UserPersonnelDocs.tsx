@@ -77,7 +77,7 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
 
   const handleSetPin = async () => {
     setVaultError(null);
-    if (pin.length < 4) return;
+    if (pin.length < 6) return;
     if (pin !== confirmPin) {
       setVaultError(t.vault.errorMismatch);
       return;
@@ -288,13 +288,6 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
                              <span>Datei</span>
                              <input type="file" className="hidden" accept="application/pdf,image/*" onChange={e => handleFileUpload(e, dt.type)} />
                           </label>
-                          <button 
-                            onClick={() => startCamera(dt.type)} 
-                            className="w-16 h-16 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-xl hover:scale-105 active:scale-95 transition-all"
-                            title="Foto machen"
-                          >
-                            📸
-                          </button>
                         </div>
                      </div>
                      
@@ -380,7 +373,7 @@ export const UserPersonnelDocs: React.FC<UserPersonnelDocsProps> = ({ t, personn
 
                 <button 
                   onClick={selectedPerson.vaultPin ? handleUnlock : handleSetPin}
-                  disabled={isProcessing || pin.length < 4 || (!selectedPerson.vaultPin && confirmPin.length < 4)}
+                  disabled={isProcessing || pin.length < 6 || (!selectedPerson.vaultPin && confirmPin.length < 6)}
                   className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-30 disabled:grayscale transition-all active:scale-95 flex items-center justify-center gap-3"
                 >
                    {isProcessing ? (

@@ -25,7 +25,7 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
       description: 'Deine Aufgaben-Liste für heute:',
       steps: [
         { t: 'Öffne eine Checkliste mit dem "Starten" Knopf.', i: '🚀' },
-        { t: 'Tippe einfach auf JA oder NEIN.', i: '🔘' },
+        { t: 'Tippe einfach auf JA oder NEIN oder die richtige Antwort.', i: '🔘' },
         { t: 'Unterschreibe am Ende mit dem Finger im Feld.', i: '🖐️' },
         { t: 'Klicke auf ABSENDEN. Die Liste verschwindet, wenn sie fertig ist.', i: '✅' }
       ]
@@ -49,9 +49,9 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
       description: 'Gesundheitsausweis & Co. einreichen:',
       steps: [
         { t: 'Wähle deinen Namen in "Meine Dokumente" aus der Liste.', i: '👤' },
-        { t: 'Klicke auf das Kamera-Symbol neben der Dokumenten-Art.', i: '📸' },
-        { t: 'Mache ein scharfes Foto von deinem Ausweis oder Zertifikat.', i: '🤳' },
-        { t: 'Tippe auf "Foto speichern". Die Verwaltung erhält es sofort.', i: '💾' }
+        { t: 'Klicke auf "DATEI" neben der Dokumenten-Art.', i: '📂' },
+        { t: 'Wähle ein Dokument aus oder nutze die Kamera deines Geräts.', i: '📸' },
+        { t: 'Tippe auf "Speichern". Die Verwaltung erhält es sofort.', i: '💾' }
       ]
     },
     {
@@ -72,7 +72,7 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
       color: 'amber',
       description: 'Dein Zugang zum Tresor:',
       steps: [
-        { t: 'Wähle deinen Namen aus und lege eine 4-stellige PIN fest.', i: '🆕' },
+        { t: 'Wähle deinen Namen aus und lege eine 6-stellige PIN fest.', i: '🆕' },
         { t: 'Merke dir die PIN gut! Du brauchst sie für alle Dokumente.', i: '🧠' },
         { t: 'PIN vergessen? Tippe auf "PIN vergessen?" unter dem Eingabefeld.', i: '❓' },
         { t: 'Die Verwaltung erhält eine Nachricht und setzt deine PIN zurück.', i: '📡' }

@@ -38,7 +38,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
     }
 
     if (Notification.permission === 'denied') {
-      alert("Benachrichtigungen wurden blockiert. Bitte in den Einstellungen aktivieren.");
+      alert("Benachrichtigungen wurden blockiert. Bitte klicken Sie in der Adressleiste Ihres Browsers auf das Schloss-Symbol (oder die Einstellungen) und aktivieren Sie dort 'Benachrichtigungen' für diese Seite.");
       return;
     }
 

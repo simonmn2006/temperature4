@@ -398,7 +398,13 @@ app.post('/api/form-responses', async (req, res) => {
         await pool.query('INSERT INTO form_responses (id, formId, facilityId, userId, timestamp, answers, signature) VALUES (?, ?, ?, ?, ?, ?, ?)', 
         [id, formId, facilityId, userId, formatSqlDateTime(timestamp), JSON.stringify(answers), signature]);
         
+        // Global stats
         await pool.query('UPDATE environmental_impact SET pagesSaved = pagesSaved + 1, tonerSaved = tonerSaved + 0.005 WHERE id = "GLOBAL"');
+        
+        // Facility specific stats
+        if (facilityId) {
+            await pool.query('INSERT INTO environmental_impact (id, pagesSaved, tonerSaved) VALUES (?, 1, 0.005) ON DUPLICATE KEY UPDATE pagesSaved = pagesSaved + 1, tonerSaved = tonerSaved + 0.005', [facilityId]);
+        }
         
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -448,6 +454,13 @@ app.get('/api/settings/holidays', (req, res) => query('SELECT * FROM settings_ho
 app.get('/api/settings/fridge-types', (req, res) => query('SELECT * FROM settings_fridge_types').then(r => res.json(r || [])));
 app.get('/api/settings/cooking-methods', (req, res) => query('SELECT * FROM settings_cooking_methods').then(r => res.json(r || [])));
 app.get('/api/settings/facility-types', (req, res) => query('SELECT * FROM settings_facility_types').then(r => res.json(r || [])));
+app.get('/api/impact-stats/:facilityId', (req, res) => {
+    const { facilityId } = req.params;
+    query('SELECT * FROM environmental_impact WHERE id = ?', [facilityId])
+        .then(r => res.json(r?.[0] || { pagesSaved: 0, tonerSaved: 0 }))
+        .catch(err => res.status(500).json({ error: err.message }));
+});
+
 app.get('/api/impact-stats', (req, res) => query('SELECT * FROM environmental_impact WHERE id = "GLOBAL"').then(r => res.json(r?.[0] || {pagesSaved:0, tonerSaved:0})));
 
 app.post('/api/test-email', async (req, res) => {
