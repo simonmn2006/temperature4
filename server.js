@@ -4,11 +4,24 @@ import mariadb from 'mariadb';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
+import http from 'http';
+import { WebSocketServer } from 'ws';
 import { createServer as createViteServer } from 'vite';
 
 dotenv.config();
 
 const app = express();
+const httpServer = http.createServer(app);
+const wss = new WebSocketServer({ server: httpServer });
+
+const broadcast = (data) => {
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) {
+            client.send(JSON.stringify(data));
+        }
+    });
+};
+
 const PORT = 3000;
 async function startServer() {
     app.use(cors());
@@ -191,16 +204,21 @@ app.post('/api/documents', async (req, res) => {
     const { id, title, category, content } = req.body;
     try {
         await pool.query('INSERT INTO documents (id, title, category, content, createdAt) VALUES (?, ?, ?, ?, NOW()) ON DUPLICATE KEY UPDATE title=VALUES(title), category=VALUES(category), content=VALUES(content)', [id, title, category || 'safety', content]);
+        broadcast({ type: 'UPDATE', entity: 'documents' });
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
-app.delete('/api/documents/:id', (req, res) => query('DELETE FROM documents WHERE id = ?', [req.params.id]).then(() => res.sendStatus(200)));
+app.delete('/api/documents/:id', (req, res) => query('DELETE FROM documents WHERE id = ?', [req.params.id]).then(() => {
+    broadcast({ type: 'UPDATE', entity: 'documents' });
+    res.sendStatus(200);
+}));
 
 app.get('/api/personnel', (req, res) => query('SELECT * FROM personnel').then(r => res.json(r || [])));
 app.post('/api/personnel', async (req, res) => {
     const { id, firstName, lastName, facilityIds, requiredDocs, status, vaultPin, isSpringer, pinResetRequested } = req.body;
     try {
         await pool.query('INSERT INTO personnel (id, firstName, lastName, facilityIds, requiredDocs, status, vaultPin, isSpringer, pinResetRequested) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE firstName=VALUES(firstName), lastName=VALUES(lastName), facilityIds=VALUES(facilityIds), requiredDocs=VALUES(requiredDocs), status=VALUES(status), vaultPin=IFNULL(VALUES(vaultPin), vaultPin), isSpringer=VALUES(isSpringer), pinResetRequested=VALUES(pinResetRequested)', [id, firstName, lastName, JSON.stringify(facilityIds), JSON.stringify(requiredDocs), status || 'Active', vaultPin || null, !!isSpringer, !!pinResetRequested]);
+        broadcast({ type: 'UPDATE', entity: 'personnel' });
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -229,6 +247,7 @@ app.post('/api/personnel/:id/request-reset', async (req, res) => {
         sendEmail('admin@gourmetta.de', subject, emailText); 
         sendTelegramMessage(telegramMessage);
 
+        broadcast({ type: 'UPDATE', entity: 'personnel' });
         res.sendStatus(200);
     } catch (err) { 
         console.error("PIN Reset Request Error:", err);
@@ -239,26 +258,35 @@ app.post('/api/personnel/:id/request-reset', async (req, res) => {
 app.post('/api/personnel/:id/reset-pin', async (req, res) => {
     try {
         await pool.query('UPDATE personnel SET vaultPin = NULL, pinResetRequested = FALSE WHERE id = ?', [req.params.id]);
+        broadcast({ type: 'UPDATE', entity: 'personnel' });
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
-app.delete('/api/personnel/:id', (req, res) => query('DELETE FROM personnel WHERE id = ?', [req.params.id]).then(() => res.sendStatus(200)));
+app.delete('/api/personnel/:id', (req, res) => query('DELETE FROM personnel WHERE id = ?', [req.params.id]).then(() => {
+    broadcast({ type: 'UPDATE', entity: 'personnel' });
+    res.sendStatus(200);
+}));
 
 app.get('/api/personnel-docs', (req, res) => query('SELECT * FROM personnel_documents ORDER BY createdAt DESC').then(r => res.json(r || [])));
 app.post('/api/personnel-docs', async (req, res) => {
     const { id, personnelId, type, content, mimeType, createdAt, visibleToUser } = req.body;
     try {
         await pool.query('INSERT INTO personnel_documents (id, personnelId, type, content, mimeType, createdAt, visibleToUser) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE visibleToUser=VALUES(visibleToUser), type=VALUES(type)', [id, personnelId, type, content, mimeType, formatSqlDateTime(createdAt), visibleToUser === undefined ? true : !!visibleToUser]);
+        broadcast({ type: 'UPDATE', entity: 'personnel-docs' });
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
-app.delete('/api/personnel-docs/:id', (req, res) => query('DELETE FROM personnel_documents WHERE id = ?', [req.params.id]).then(() => res.sendStatus(200)));
+app.delete('/api/personnel-docs/:id', (req, res) => query('DELETE FROM personnel_documents WHERE id = ?', [req.params.id]).then(() => {
+    broadcast({ type: 'UPDATE', entity: 'personnel-docs' });
+    res.sendStatus(200);
+}));
 
 app.get('/api/alerts', (req, res) => query('SELECT * FROM alerts WHERE resolved = 0').then(r => res.json(r || [])));
 app.post('/api/alerts', async (req, res) => {
     const { id, facilityId, facilityName, targetName, checkpointName, value, min, max, timestamp, userId, userName, resolved } = req.body;
     try {
         await pool.query('INSERT INTO alerts (id, facilityId, facilityName, targetName, checkpointName, value, min, max, timestamp, userId, userName, resolved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE resolved=VALUES(resolved)', [id, facilityId, facilityName, targetName, checkpointName, value, min, max, formatSqlDateTime(timestamp), userId, userName, !!resolved]);
+        broadcast({ type: 'UPDATE', entity: 'alerts' });
         res.sendStatus(200);
     } catch (e) { res.status(500).json({error: e.message}); }
 });
@@ -348,6 +376,7 @@ app.post('/api/users', async (req, res) => {
                      ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), email=VALUES(email), status=VALUES(status), facilityId=VALUES(facilityId), 
                      managedFacilityIds=VALUES(managedFacilityIds), emailAlerts=VALUES(emailAlerts), telegramAlerts=VALUES(telegramAlerts), allFacilitiesAlerts=VALUES(allFacilitiesAlerts)`, 
         [id, name, username, password, email, role, status, facilityId, JSON.stringify(managedFacilityIds || []), !!emailAlerts, !!telegramAlerts, !!allFacilitiesAlerts]);
+        broadcast({ type: 'UPDATE', entity: 'users' });
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -357,6 +386,7 @@ app.post('/api/facilities', async (req, res) => {
     const { id, name, typeId, cookingMethodId, supervisorId } = req.body;
     try {
         await pool.query('INSERT INTO facilities (id, name, typeId, cookingMethodId, supervisorId) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), typeId=VALUES(typeId), cookingMethodId=VALUES(cookingMethodId), supervisorId=VALUES(supervisorId)', [id, name, typeId, cookingMethodId, supervisorId]);
+        broadcast({ type: 'UPDATE', entity: 'facilities' });
         res.sendStatus(200);
     } catch (e) { res.status(500).json({error: e.message}); }
 });
@@ -366,20 +396,28 @@ app.post('/api/refrigerators', async (req, res) => {
     const { id, name, facilityId, typeName, currentTemp, status } = req.body;
     try {
         await pool.query('INSERT INTO refrigerators (id, name, facilityId, typeName, currentTemp, status) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name), typeName=VALUES(typeName), facilityId=VALUES(facilityId)', [id, name, facilityId, typeName, currentTemp || 4.0, status || 'Optimal']);
+        broadcast({ type: 'UPDATE', entity: 'refrigerators' });
         res.sendStatus(200);
     } catch (e) { res.status(500).json({error: e.message}); }
 });
-app.delete('/api/refrigerators/:id', (req, res) => query('DELETE FROM refrigerators WHERE id = ?', [req.params.id]).then(() => res.sendStatus(200)));
+app.delete('/api/refrigerators/:id', (req, res) => query('DELETE FROM refrigerators WHERE id = ?', [req.params.id]).then(() => {
+    broadcast({ type: 'UPDATE', entity: 'refrigerators' });
+    res.sendStatus(200);
+}));
 
 app.get('/api/menus', (req, res) => query('SELECT * FROM menus').then(r => res.json(r || [])));
 app.post('/api/menus', async (req, res) => {
     const { id, name } = req.body;
     try {
         await pool.query('INSERT INTO menus (id, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name=VALUES(name)', [id, name]);
+        broadcast({ type: 'UPDATE', entity: 'menus' });
         res.sendStatus(200);
     } catch (e) { res.status(500).json({error: e.message}); }
 });
-app.delete('/api/menus/:id', (req, res) => query('DELETE FROM menus WHERE id = ?', [req.params.id]).then(() => res.sendStatus(200)));
+app.delete('/api/menus/:id', (req, res) => query('DELETE FROM menus WHERE id = ?', [req.params.id]).then(() => {
+    broadcast({ type: 'UPDATE', entity: 'menus' });
+    res.sendStatus(200);
+}));
 
 app.get('/api/readings', (req, res) => query('SELECT * FROM readings ORDER BY timestamp DESC LIMIT 2000').then(r => res.json(r || [])));
 app.post('/api/readings', async (req, res) => {
@@ -393,6 +431,7 @@ app.post('/api/readings', async (req, res) => {
             sendAlarmEmail(reading).catch(e => console.error("Email dispatcher error:", e));
             sendAlarmTelegram(reading).catch(e => console.error("Telegram dispatcher error:", e));
         }
+        broadcast({ type: 'UPDATE', entity: 'readings' });
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -412,6 +451,7 @@ app.post('/api/form-responses', async (req, res) => {
             await pool.query('INSERT INTO environmental_impact (id, pagesSaved, tonerSaved) VALUES (?, 1, 0.005) ON DUPLICATE KEY UPDATE pagesSaved = pagesSaved + 1, tonerSaved = tonerSaved + 0.005', [facilityId]);
         }
         
+        broadcast({ type: 'UPDATE', entity: 'form-responses' });
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -421,6 +461,7 @@ app.post('/api/form-templates', async (req, res) => {
     const { id, title, description, questions, requiresSignature, createdAt } = req.body;
     try {
         await pool.query('INSERT INTO form_templates (id, title, description, questions, requiresSignature, createdAt) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title=VALUES(title), questions=VALUES(questions), requiresSignature=VALUES(requiresSignature)', [id, title, description, JSON.stringify(questions), !!requiresSignature, stripToDate(createdAt)]);
+        broadcast({ type: 'UPDATE', entity: 'form-templates' });
         res.sendStatus(200);
     } catch (e) { res.status(500).json({error: e.message}); }
 });
@@ -430,6 +471,7 @@ app.post('/api/assignments', async (req, res) => {
     const { id, targetType, targetId, resourceType, resourceId, frequency, frequencyDay, startDate, endDate, skipWeekend, skipHolidays } = req.body;
     try {
         await pool.query('INSERT INTO assignments (id, targetType, targetId, resourceType, resourceId, frequency, frequencyDay, startDate, endDate, skipWeekend, skipHolidays) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE frequency=VALUES(frequency), frequencyDay=VALUES(frequencyDay), endDate=VALUES(endDate)', [id, targetType, targetId, resourceType, resourceId, frequency, frequencyDay, stripToDate(startDate), stripToDate(endDate), !!skipWeekend, !!skipHolidays]);
+        broadcast({ type: 'UPDATE', entity: 'assignments' });
         res.sendStatus(200);
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -439,6 +481,7 @@ app.post('/api/reminders', async (req, res) => {
     const { id, time, label, active, days, targetRoles } = req.body;
     try {
         await pool.query('INSERT INTO reminders (id, time, label, active, days, targetRoles) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE time=VALUES(time), label=VALUES(label), active=VALUES(active), days=VALUES(days), targetRoles=VALUES(targetRoles)', [id, time, label, !!active, JSON.stringify(days), JSON.stringify(targetRoles)]);
+        broadcast({ type: 'UPDATE', entity: 'reminders' });
         res.sendStatus(200);
     } catch (e) { res.status(500).json({error: e.message}); }
 });
@@ -511,7 +554,7 @@ app.post('/api/test-telegram', async (req, res) => {
         app.get('*', (req, res) => res.sendFile('dist/index.html', { root: '.' }));
     }
 
-    app.listen(PORT, async () => {
+    httpServer.listen(PORT, async () => {
         console.log(`🚀 HACCP Server fully operational on port ${PORT}`);
         console.log(`📡 Connecting to MariaDB at ${process.env.DB_HOST || '127.0.0.1'}...`);
         try {

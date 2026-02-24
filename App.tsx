@@ -148,33 +148,69 @@ const App: React.FC = () => {
     } catch (e) {}
   }, []);
 
+  const endpoints = useMemo<[string, string, (v: any) => void][]>(() => [
+    ['users', 'users', setUsers], 
+    ['facilities', 'facilities', setFacilities], 
+    ['refrigerators', 'refrigerators', setFridges], 
+    ['menus', 'menus', setMenus], 
+    ['assignments', 'assignments', setAssignments], 
+    ['reminders', 'reminders', setReminders],
+    ['readings', 'readings', setReadings], 
+    ['form-responses', 'form-responses', setFormResponses], 
+    ['form-templates', 'forms', setForms], 
+    ['documents', 'documents', setDocuments], 
+    ['personnel', 'personnel', setPersonnel],
+    ['personnel-docs', 'personnelDocs', setPersonnelDocs],
+    ['impact-stats', 'impact', setImpactStats], 
+    ['audit-logs', 'audit', setAuditLogs], 
+    ['alerts', 'alerts', setAlerts],
+    ['settings/exceptions', 'exceptions', setExcludedFacilities],
+    ['settings/legal', 'legal', setLegalTexts],
+    ['settings/holidays', 'holidays', setHolidays], 
+    ['settings/fridge-types', 'fridgeTypes', setFridgeTypes], 
+    ['settings/cooking-methods', 'cookingMethods', setCookingMethods], 
+    ['settings/facility-types', 'facilityTypes', setFacilityTypes]
+  ], []);
+
+  const refreshEntity = useCallback(async (entity: string) => {
+    const entry = endpoints.find(e => e[0] === entity || e[1] === entity);
+    if (!entry) return;
+    const [path, key, setter] = entry;
+    try {
+      const res = await fetch(`${API_BASE}/${path}`);
+      if (res.ok) {
+        const data = await res.json();
+        setter(data);
+        saveToCache(key, data);
+      }
+    } catch (e) {}
+  }, [endpoints]);
+
+  useEffect(() => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}`;
+    let socket: WebSocket;
+
+    const connect = () => {
+      socket = new WebSocket(wsUrl);
+      socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'UPDATE' && message.entity) {
+            refreshEntity(message.entity);
+          }
+        } catch (e) {}
+      };
+      socket.onclose = () => setTimeout(connect, 3000);
+    };
+
+    connect();
+    return () => socket?.close();
+  }, [refreshEntity]);
+
   useEffect(() => { refreshQueueCount(); }, [refreshQueueCount]);
 
   useEffect(() => {
-    const endpoints: [string, string, (v: any) => void][] = [
-      ['users', 'users', setUsers], 
-      ['facilities', 'facilities', setFacilities], 
-      ['refrigerators', 'refrigerators', setFridges], 
-      ['menus', 'menus', setMenus], 
-      ['assignments', 'assignments', setAssignments], 
-      ['reminders', 'reminders', setReminders],
-      ['readings', 'readings', setReadings], 
-      ['form-responses', 'form-responses', setFormResponses], 
-      ['form-templates', 'forms', setForms], 
-      ['documents', 'documents', setDocuments], 
-      ['personnel', 'personnel', setPersonnel],
-      ['personnel-docs', 'personnelDocs', setPersonnelDocs],
-      ['impact-stats', 'impact', setImpactStats], 
-      ['audit-logs', 'audit', setAuditLogs], 
-      ['alerts', 'alerts', setAlerts],
-      ['settings/exceptions', 'exceptions', setExcludedFacilities],
-      ['settings/legal', 'legal', setLegalTexts],
-      ['settings/holidays', 'holidays', setHolidays], 
-      ['settings/fridge-types', 'fridgeTypes', setFridgeTypes], 
-      ['settings/cooking-methods', 'cookingMethods', setCookingMethods], 
-      ['settings/facility-types', 'facilityTypes', setFacilityTypes]
-    ];
-
     const load = async () => {
       if (!isInitialLoadDone) {
         for (const [_, key, setter] of endpoints) {
@@ -201,9 +237,9 @@ const App: React.FC = () => {
       }
     };
     load();
-    const interval = setInterval(load, 30000);
+    const interval = setInterval(load, 60000);
     return () => clearInterval(interval);
-  }, [isInitialLoadDone]);
+  }, [isInitialLoadDone, endpoints]);
 
   const addToSyncQueue = useCallback(async (endpoint: string, data: any, method: string) => {
     try {
