@@ -1,6 +1,6 @@
 
 // Added Language type to support LanguageToggle component
-export type Language = 'de' | 'en';
+export type Language = 'de' | 'en' | 'fr' | 'es';
 
 export enum AdminTab {
   DASHBOARD = 'dashboard',
@@ -17,7 +17,8 @@ export enum AdminTab {
   AUDIT_LOGS = 'audit_logs',
   REMINDERS = 'reminders',
   DOCUMENTS = 'documents',
-  PERSONNEL = 'personnel'
+  PERSONNEL = 'personnel',
+  BRANDING = 'branding'
 }
 
 export type DocumentCategory = 'safety' | 'staff' | 'hygiene';

@@ -77,6 +77,10 @@ async function query(sql, params) {
 
 async function sendEmail(to, subject, text, html) {
   try {
+      const branding = await query('SELECT appName FROM settings_branding WHERE id = "GLOBAL"');
+      const appName = branding?.[0]?.appName || 'Gourmetta';
+      const finalSubject = `[${appName}] ${subject}`;
+
       const smtpSettings = await query('SELECT * FROM settings_smtp WHERE id = "GLOBAL"');
       if (!smtpSettings || smtpSettings.length === 0 || !smtpSettings[0].host || !smtpSettings[0].user || !smtpSettings[0].pass) {
           console.warn('SMTP settings not configured. Skipping email notification.');
@@ -84,7 +88,7 @@ async function sendEmail(to, subject, text, html) {
       }
       const { host, port, user, pass, from, secure } = smtpSettings[0];
       const transporter = nodemailer.createTransport({ host, port: parseInt(port), secure: !!secure, auth: { user, pass } });
-      await transporter.sendMail({ from: from || user, to, subject, text, html });
+      await transporter.sendMail({ from: from || user, to, subject: finalSubject, text, html });
       console.log('Email sent successfully to', to);
   } catch (error) {
       console.error('Failed to send email:', error);
@@ -287,6 +291,33 @@ app.post('/api/alerts', async (req, res) => {
     try {
         await pool.query('INSERT INTO alerts (id, facilityId, facilityName, targetName, checkpointName, value, min, max, timestamp, userId, userName, resolved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE resolved=VALUES(resolved)', [id, facilityId, facilityName, targetName, checkpointName, value, min, max, formatSqlDateTime(timestamp), userId, userName, !!resolved]);
         broadcast({ type: 'UPDATE', entity: 'alerts' });
+        res.sendStatus(200);
+    } catch (e) { res.status(500).json({error: e.message}); }
+});
+
+app.get('/api/settings/branding', (req, res) => query('SELECT * FROM settings_branding WHERE id = "GLOBAL"').then(r => res.json(r?.[0] || {})));
+app.post('/api/settings/branding', async (req, res) => {
+    const { appName, primaryColor, logoUrl, defaultLanguage } = req.body;
+    try {
+        await pool.query(`INSERT INTO settings_branding (id, appName, primaryColor, logoUrl, defaultLanguage) 
+                         VALUES ('GLOBAL', ?, ?, ?, ?) 
+                         ON DUPLICATE KEY UPDATE appName=VALUES(appName), primaryColor=VALUES(primaryColor), logoUrl=VALUES(logoUrl), defaultLanguage=VALUES(defaultLanguage)`,
+        [appName, primaryColor, logoUrl, defaultLanguage]);
+        broadcast({ type: 'UPDATE', entity: 'branding' });
+        res.sendStatus(200);
+    } catch (e) { res.status(500).json({error: e.message}); }
+});
+
+app.get('/api/translations/:lang', (req, res) => query('SELECT * FROM translations WHERE lang = ?', [req.params.lang]).then(r => res.json(r || [])));
+app.post('/api/translations', async (req, res) => {
+    const { lang, tkey, tvalue } = req.body;
+    const id = `${lang}_${tkey}`;
+    try {
+        await pool.query(`INSERT INTO translations (id, lang, tkey, tvalue) 
+                         VALUES (?, ?, ?, ?) 
+                         ON DUPLICATE KEY UPDATE tvalue=VALUES(tvalue)`,
+        [id, lang, tkey, tvalue]);
+        broadcast({ type: 'UPDATE', entity: 'translations' });
         res.sendStatus(200);
     } catch (e) { res.status(500).json({error: e.message}); }
 });
@@ -561,6 +592,24 @@ app.post('/api/test-telegram', async (req, res) => {
             // Run sanity check on DB connection during startup
             const testConn = await pool.getConnection();
             console.log("✅ MariaDB Connection Verified!");
+            
+            await testConn.query(`CREATE TABLE IF NOT EXISTS settings_branding (
+                id VARCHAR(50) PRIMARY KEY,
+                appName VARCHAR(255),
+                primaryColor VARCHAR(50),
+                logoUrl TEXT,
+                defaultLanguage VARCHAR(10)
+            )`);
+            await testConn.query(`CREATE TABLE IF NOT EXISTS translations (
+                id VARCHAR(255) PRIMARY KEY,
+                lang VARCHAR(10),
+                tkey VARCHAR(255),
+                tvalue TEXT,
+                UNIQUE KEY lang_key (lang, tkey)
+            )`);
+
+            await testConn.query(`INSERT IGNORE INTO settings_branding (id, appName, primaryColor, logoUrl, defaultLanguage) 
+                VALUES ('GLOBAL', 'Gourmetta', '#10b981', '', 'de')`);
             
             await testConn.query(`INSERT IGNORE INTO settings_smtp (id, host, port, secure) VALUES ('GLOBAL', 'smtp.strato.de', 465, 1)`);
             await testConn.query(`INSERT IGNORE INTO settings_telegram (id, token, chatId) VALUES ('GLOBAL', '', '')`);

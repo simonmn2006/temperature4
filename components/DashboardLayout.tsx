@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { AdminTab, TranslationSet, User, Alert } from '../types';
+import { AdminTab, User, Alert } from '../types';
+import { useBranding, T } from '../BrandingContext';
 
 interface DashboardLayoutProps {
-  t: TranslationSet;
   currentUser: User;
   activeTab: AdminTab;
   onTabChange: (tab: AdminTab) => void;
@@ -13,30 +13,32 @@ interface DashboardLayoutProps {
   backendOffline?: boolean;
 }
 
-const LOGO_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.256 1.181-3.103.493.969.819 2.087.819 3.103z'/%3E%3C/svg%3E";
-
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
-  t, currentUser, activeTab, onTabChange, onLogout, children, alerts, backendOffline
+  currentUser, activeTab, onTabChange, onLogout, children, alerts, backendOffline
 }) => {
+  const { settings, t } = useBranding();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const [isDesktopExpanded, setIsDesktopExpanded] = useState(true);
 
+  const LOGO_URL = settings.logoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.256 1.181-3.103.493.969.819 2.087.819 3.103z'/%3E%3C/svg%3E";
+
   const menuItems = [
-    { id: AdminTab.DASHBOARD, icon: '📊', roles: ['Admin', 'Manager', 'SuperAdmin'] },
-    { id: AdminTab.USERS, icon: '👥', roles: ['Admin', 'SuperAdmin'] },
-    { id: AdminTab.FACILITIES, icon: '🏢', roles: ['Admin', 'Manager', 'SuperAdmin'] },
-    { id: AdminTab.PERSONNEL, icon: '👔', roles: ['Admin', 'Manager', 'SuperAdmin'] },
-    { id: AdminTab.REFRIGERATORS, icon: '❄️', roles: ['Admin', 'Manager', 'SuperAdmin'] },
-    { id: AdminTab.MENUS, icon: '🍽️', roles: ['Admin', 'SuperAdmin'] },
-    { id: AdminTab.FORM_CREATOR, icon: '📝', roles: ['Admin', 'SuperAdmin'] },
-    { id: AdminTab.DOCUMENTS, icon: '📚', roles: ['Admin', 'SuperAdmin'] },
-    { id: AdminTab.ASSIGNMENTS, icon: '🔗', roles: ['Admin', 'SuperAdmin'] },
-    { id: AdminTab.REPORTS, icon: '📑', roles: ['Admin', 'Manager', 'SuperAdmin'] },
-    { id: AdminTab.FACILITY_ANALYTICS, icon: '📈', roles: ['Admin', 'Manager', 'SuperAdmin'] },
-    { id: AdminTab.REMINDERS, icon: '⏰', roles: ['Admin', 'SuperAdmin'] },
-    { id: AdminTab.SETTINGS, icon: '⚙️', roles: ['Admin', 'SuperAdmin'] },
-    { id: AdminTab.BACKUP_SYNC, icon: '🔄', roles: ['SuperAdmin'] },
-    { id: AdminTab.AUDIT_LOGS, icon: '🛡️', roles: ['SuperAdmin'] },
+    { id: AdminTab.DASHBOARD, icon: '📊', roles: ['Admin', 'Manager', 'SuperAdmin'], tkey: 'nav.dashboard' },
+    { id: AdminTab.USERS, icon: '👥', roles: ['Admin', 'SuperAdmin'], tkey: 'admin.users' },
+    { id: AdminTab.FACILITIES, icon: '🏢', roles: ['Admin', 'Manager', 'SuperAdmin'], tkey: 'admin.facilities' },
+    { id: AdminTab.PERSONNEL, icon: '👔', roles: ['Admin', 'Manager', 'SuperAdmin'], tkey: 'admin.personnel' },
+    { id: AdminTab.REFRIGERATORS, icon: '❄️', roles: ['Admin', 'Manager', 'SuperAdmin'], tkey: 'admin.refrigerators' },
+    { id: AdminTab.MENUS, icon: '🍽️', roles: ['Admin', 'SuperAdmin'], tkey: 'admin.menus' },
+    { id: AdminTab.FORM_CREATOR, icon: '📝', roles: ['Admin', 'SuperAdmin'], tkey: 'admin.forms' },
+    { id: AdminTab.DOCUMENTS, icon: '📚', roles: ['Admin', 'SuperAdmin'], tkey: 'admin.documents' },
+    { id: AdminTab.ASSIGNMENTS, icon: '🔗', roles: ['Admin', 'SuperAdmin'], tkey: 'admin.assignments' },
+    { id: AdminTab.REPORTS, icon: '📑', roles: ['Admin', 'Manager', 'SuperAdmin'], tkey: 'nav.readings' },
+    { id: AdminTab.FACILITY_ANALYTICS, icon: '📈', roles: ['Admin', 'Manager', 'SuperAdmin'], tkey: 'nav.dashboard' },
+    { id: AdminTab.REMINDERS, icon: '⏰', roles: ['Admin', 'SuperAdmin'], tkey: 'admin.reminders' },
+    { id: AdminTab.SETTINGS, icon: '⚙️', roles: ['Admin', 'SuperAdmin'], tkey: 'nav.admin' },
+    { id: AdminTab.BACKUP_SYNC, icon: '🔄', roles: ['SuperAdmin'], tkey: 'admin.logs' },
+    { id: AdminTab.AUDIT_LOGS, icon: '🛡️', roles: ['SuperAdmin'], tkey: 'admin.logs' },
+    { id: AdminTab.BRANDING, icon: '🎨', roles: ['SuperAdmin'], tkey: 'admin.branding' },
   ].filter(item => item.roles.includes(currentUser.role));
 
   const activeAlertCount = useMemo(() => {
@@ -61,7 +63,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
           {(isSidebarOpen || isDesktopExpanded) && (
             <div className="flex flex-col min-w-0 pb-2">
-              <span className="font-black text-xl text-slate-900 dark:text-slate-100 truncate leading-snug italic tracking-tighter">gourmetta</span>
+              <span className="font-black text-xl text-slate-900 dark:text-slate-100 truncate leading-snug italic tracking-tighter">
+                {settings.appName}
+              </span>
               <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] -mt-1">{currentUser.role}</span>
             </div>
           )}
@@ -83,7 +87,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 {isActive && <div className="absolute left-0 w-1 h-6 bg-blue-600 dark:bg-blue-400 rounded-r-full animate-in slide-in-from-left-2 duration-300" />}
                 <span className={`text-xl flex-shrink-0 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>{item.icon}</span>
                 {(isSidebarOpen || isDesktopExpanded) && (
-                  <span className="truncate text-sm font-bold flex-1">{t.tabs[item.id]}</span>
+                  <span className="truncate text-sm font-bold flex-1">
+                    <T tkey={item.tkey} />
+                  </span>
                 )}
               </button>
             );
@@ -94,7 +100,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div className="space-y-4">
             <button onClick={onLogout} className={`w-full flex items-center ${isSidebarOpen || isDesktopExpanded ? 'space-x-3 px-3 py-2.5' : 'justify-center py-2.5'} rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors`}>
               <span className="text-lg">🚪</span>
-              {(isSidebarOpen || isDesktopExpanded) && <span className="font-black text-[11px] uppercase tracking-widest">{t.logout}</span>}
+              {(isSidebarOpen || isDesktopExpanded) && <span className="font-black text-[11px] uppercase tracking-widest"><T tkey="nav.logout" /></span>}
             </button>
           </div>
         </div>
