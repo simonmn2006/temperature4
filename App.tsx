@@ -26,6 +26,7 @@ import { DashboardPage } from './pages/Dashboard';
 import { UserAcademy } from './pages/UserAcademy';
 import { PersonnelPage } from './pages/Personnel';
 import { UserPersonnelDocs } from './pages/UserPersonnelDocs';
+import { BrandingPage } from './pages/Branding';
 
 const API_BASE = '/api';
 
@@ -394,7 +395,7 @@ const App: React.FC = () => {
   return (
     <div className="relative min-h-screen">
       {isAdminView ? (
-        <DashboardLayout t={t} currentUser={currentUser} activeTab={activeTab as AdminTab} onTabChange={setActiveTab} onLogout={() => { setIsAuthenticated(false); setCurrentUser(null); setForcedRoleView(null); localStorage.clear(); sessionStorage.clear(); }} alerts={activeAlerts} backendOffline={!isOnline || backendError}>
+        <DashboardLayout currentUser={currentUser} activeTab={activeTab as AdminTab} onTabChange={setActiveTab} onLogout={() => { setIsAuthenticated(false); setCurrentUser(null); setForcedRoleView(null); localStorage.clear(); sessionStorage.clear(); }} alerts={activeAlerts} backendOffline={!isOnline || backendError}>
           {activeTab === AdminTab.USERS ? <UsersPage t={t} currentUser={currentUser} users={users} setUsers={setUsers} facilities={facilities} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} onSync={u => sync('users', u)} /> :
            activeTab === AdminTab.FACILITIES ? <FacilitiesPage t={t} facilities={facilities} setFacilities={setFacilities} facilityTypes={facilityTypes} cookingMethods={cookingMethods} users={users} fridges={fridges} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} onSync={f => sync('facilities', f)} onTabChange={setActiveTab as any} /> :
            activeTab === AdminTab.REFRIGERATORS ? <RefrigeratorsPage t={t} facilities={facilities} setFacilities={setFacilities} fridges={fridges} setFridges={setFridges} fridgeTypes={fridgeTypes} users={users} setUsers={setUsers} setAssignments={setAssignments} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} setAlerts={setAlerts} onSync={r => sync('refrigerators', r)} onSyncDelete={id => sync('refrigerators', id, 'DELETE')} /> :
@@ -409,6 +410,7 @@ const App: React.FC = () => {
            activeTab === AdminTab.BACKUP_SYNC ? <BackupSyncPage t={t} users={users} setUsers={setUsers} facilities={facilities} setFacilities={setFacilities} currentUser={currentUser} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} facilityTypes={facilityTypes} cookingMethods={cookingMethods} /> :
            activeTab === AdminTab.AUDIT_LOGS ? <AuditLogsPage t={t} logs={auditLogs} /> :
            activeTab === AdminTab.SETTINGS ? <SettingsPage t={t} facilities={facilities} fridgeTypes={fridgeTypes} setFridgeTypes={setFridgeTypes} cookingMethods={cookingMethods} setCookingMethods={setCookingMethods} facilityTypes={facilityTypes} setFacilityTypes={setFacilityTypes} holidays={holidays} setHolidays={setHolidays} excludedFacilities={excludedFacilities} setExcludedFacilities={setExcludedFacilities} legalTexts={legalTexts} setLegalTexts={setLegalTexts} onSyncHoliday={h => sync('settings/holidays', h)} onSyncFridgeType={ft => sync('settings/fridge-types', ft)} onSyncCooking={cm => sync('settings/cooking-methods', cm)} onSyncFacilityType={ft => sync('settings/facility-types', ft)} onSyncException={ex => sync('settings/exceptions', ex)} onSyncExceptionDelete={id => sync('settings/exceptions', id, 'DELETE')} onSyncLegal={l => sync('settings/legal', l)} /> :
+           activeTab === AdminTab.BRANDING ? <BrandingPage /> :
            <DashboardPage t={t} currentUser={currentUser} users={users} personnel={personnel} facilities={facilities} fridges={fridges} alerts={alerts} setAlerts={setAlerts} impactStats={impactStats} onSyncAlert={a => sync('alerts', a)} onNavigateToPersonnel={(id) => { setActiveTab(AdminTab.PERSONNEL); }} />
           }
         </DashboardLayout>

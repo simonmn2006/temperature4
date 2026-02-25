@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { useBranding } from '../BrandingContext';
+import { useBranding } from '../src/BrandingContext';
 import { Settings, Palette, Type, Globe, Edit3, Check, Save } from 'lucide-react';
-import { defaultTranslations } from '../defaultTranslations';
+import { defaultTranslations } from '../src/defaultTranslations';
 
 export const BrandingPage: React.FC = () => {
   const { settings, updateBranding, language, setLanguage, editMode, setEditMode, t } = useBranding();

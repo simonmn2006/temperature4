@@ -24,6 +24,7 @@ export const germanTranslations: TranslationSet = {
     [AdminTab.REMINDERS]: 'Erinnerungen',
     [AdminTab.DOCUMENTS]: 'Handbücher',
     [AdminTab.PERSONNEL]: 'Personal',
+    [AdminTab.BRANDING]: 'System-Branding',
     user_workspace: 'Temperaturerfassung',
     user_forms: 'Checklisten',
     user_reports: 'Meine Berichte',

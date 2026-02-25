@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { AdminTab, User, Alert } from '../types';
-import { useBranding, T } from '../BrandingContext';
+import { useBranding, T } from '../src/BrandingContext';
 
 interface DashboardLayoutProps {
   currentUser: User;
