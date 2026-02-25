@@ -11,7 +11,7 @@ interface GroupedItem {
 }
 
 interface UserWorkspaceProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   user: User;
   fridges: Refrigerator[];
   menus: Menu[];
@@ -154,7 +154,7 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
     const reason = draftReasons[cp.uniqueKey] || '';
 
     if (isOutOfRange && !reason.trim()) {
-      alert("Bitte geben Sie einen Grund für die Temperatur-Abweichung an.");
+      alert(t('user.workspace.reasonRequired'));
       return;
     }
 
@@ -219,7 +219,7 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
            <div className="flex items-center space-x-6">
               <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner">📍</div>
               <div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Aktueller Standort</p>
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{t('user.workspace.currentLocation')}</p>
                  {availableFacilityIds.length > 1 ? (
                    <select 
                      value={activeFacilityId} 
@@ -231,14 +231,14 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
                       ))}
                    </select>
                  ) : (
-                   <h2 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">{activeFacility?.name || 'Kein Standort'}</h2>
+                   <h2 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">{activeFacility?.name || t('user.workspace.noLocation')}</h2>
                  )}
               </div>
            </div>
         </div>
         <div className="flex-1 bg-slate-900 text-white p-6 rounded-[2.5rem] flex items-center justify-between shadow-2xl">
            <div className="space-y-0.5">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Digitale HACCP-Uhr</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{t('user.workspace.haccpClock')}</p>
               <h2 className="text-3xl font-black font-mono tracking-tighter text-blue-400">{now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</h2>
            </div>
            <div className="text-right">
@@ -252,7 +252,7 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
         {activeExclusion ? (
           <div className="bg-white dark:bg-slate-900 min-h-[300px] rounded-[3.5rem] border border-slate-100 flex flex-col items-center justify-center p-12 text-center shadow-xl">
              <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center text-4xl mb-6 shadow-inner">🚫</div>
-             <h2 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tighter">Betriebspause</h2>
+             <h2 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tighter">{t('user.workspace.break')}</h2>
              <p className="text-slate-500 font-medium max-w-sm">{activeExclusion.reason}</p>
           </div>
         ) : groupedActiveItems.length > 0 ? (
@@ -275,7 +275,7 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
                           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
                              <div>
                                 <h4 className="text-3xl font-black text-slate-900 dark:text-white mb-2">{cp.name}</h4>
-                                <span className="px-4 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Bereich: {cp.minTemp}° - {cp.maxTemp}°C</span>
+                                <span className="px-4 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{t('user.workspace.range')}: {cp.minTemp}° - {cp.maxTemp}°C</span>
                              </div>
                              <div className="flex items-center space-x-6">
                                 <div className={`flex items-center bg-white dark:bg-slate-800 rounded-3xl p-3 border-2 shadow-xl ${isOutOfRange ? 'border-rose-500' : 'border-slate-50'}`}>
@@ -294,11 +294,11 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
                           </div>
                           {isOutOfRange && (
                             <div className="mt-8 animate-in slide-in-from-top-4">
-                               <label className="block text-[10px] font-black text-rose-500 uppercase tracking-widest mb-3 px-1">Pflichtfeld: Begründung für Grenzwert-Abweichung</label>
+                               <label className="block text-[10px] font-black text-rose-500 uppercase tracking-widest mb-3 px-1">{t('user.workspace.reasonLabel')}</label>
                                <textarea 
                                  value={draftReasons[cp.uniqueKey] || ''} 
                                  onChange={e => setDraftReasons({...draftReasons, [cp.uniqueKey]: e.target.value})} 
-                                 placeholder="Warum weicht die Temperatur ab? (z.B. Abtauphase, Tür offen, etc.)" 
+                                 placeholder={t('user.workspace.reasonPlaceholder')} 
                                  className="w-full p-6 rounded-[2rem] bg-rose-50/50 border-2 border-rose-100 font-bold text-slate-900 outline-none focus:border-rose-500 transition-all min-h-[120px]" 
                                />
                             </div>
@@ -312,8 +312,8 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
         ) : (
           <div className="py-20 text-center bg-white dark:bg-slate-900 rounded-[3.5rem] border-4 border-dashed border-slate-100">
              <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-inner animate-bounce">🏆</div>
-             <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Bereit für heute</h3>
-             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2">Alle Messungen für diesen Standort wurden erfasst.</p>
+             <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">{t('user.workspace.ready')}</h3>
+             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-2">{t('user.workspace.readySubtitle')}</p>
           </div>
         )}
       </div>
@@ -326,21 +326,21 @@ export const UserWorkspace: React.FC<UserWorkspaceProps> = ({
             <div className="text-left">
                <div className="flex items-center space-x-4 mb-4">
                   <span className="text-3xl">🌱</span>
-                  <h2 className="text-2xl font-black italic tracking-tighter uppercase">gourmetta go green</h2>
+                  <h2 className="text-2xl font-black italic tracking-tighter uppercase">{t('user.workspace.greenTitle')}</h2>
                </div>
                <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-md">
-                  Ihre Arbeit an diesem Standort schützt die Umwelt. Durch digitale Dokumentation sparen wir gemeinsam wertvolle Ressourcen.
+                  {t('user.workspace.greenDesc')}
                </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 w-full md:w-auto">
                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2rem] text-center min-w-[160px]">
                   <h4 className="text-3xl font-black text-emerald-400 mb-1">{facilityImpact.pagesSaved.toLocaleString()}</h4>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Eingesparte Seiten</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('user.workspace.pagesSaved')}</p>
                </div>
                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[2rem] text-center min-w-[160px]">
                   <h4 className="text-3xl font-black text-blue-400 mb-1">{Math.floor(facilityImpact.tonerSaved)}</h4>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gesparte Kartuschen</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{t('user.workspace.tonerSaved')}</p>
                </div>
             </div>
          </div>

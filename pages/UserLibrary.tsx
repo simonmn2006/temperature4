@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { Document, DocumentCategory, TranslationSet } from '../types';
 
 interface UserLibraryProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   documents: Document[];
 }
 

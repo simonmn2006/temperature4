@@ -4,7 +4,7 @@ import { TranslationSet, Reading, User, Facility, Refrigerator, Menu, FacilityEx
 import { GermanCalendarPicker } from '../components/GermanCalendarPicker';
 
 interface ReportsPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   currentUser: User;
   readings: Reading[];
   formResponses: FormResponse[];

@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { TranslationSet, AuditLog } from '../types';
 
 interface AuditLogsPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   logs: AuditLog[];
 }
 

@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { TranslationSet, Refrigerator, Facility, RefrigeratorType, User, Assignment, AuditLog, Alert } from '../types';
 
 interface RefrigeratorsPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   facilities: Facility[];
   setFacilities: React.Dispatch<React.SetStateAction<Facility[]>>;
   fridges: Refrigerator[];

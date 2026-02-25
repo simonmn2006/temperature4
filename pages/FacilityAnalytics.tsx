@@ -4,7 +4,7 @@ import { TranslationSet, Facility, Alert, Reading, FacilityType } from '../types
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface FacilityAnalyticsPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   facilities: Facility[];
   alerts: Alert[];
   readings: Reading[];

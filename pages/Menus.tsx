@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { TranslationSet, Menu } from '../types';
 
 interface MenusPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   menus: Menu[];
   setMenus: React.Dispatch<React.SetStateAction<Menu[]>>;
   // Added missing sync props

@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { AdminTab, User, Facility, Refrigerator, Assignment, Menu, FormTemplate, Reading, FormResponse, RefrigeratorType, CookingMethod, FacilityType, Holiday, FacilityException, Alert, AuditLog, ReminderConfig, Document, Personnel, PersonnelDocument } from './types';
-import { germanTranslations as t } from './translations';
+import { useBranding } from './src/BrandingContext';
 import { Login } from './pages/Login';
 import { DashboardLayout } from './components/DashboardLayout';
 import { UserDashboardLayout } from './components/UserDashboardLayout';
@@ -44,6 +44,7 @@ const openDB = () => {
 };
 
 const App: React.FC = () => {
+  const { t } = useBranding();
   const [backendError, setBackendError] = useState<boolean>(false);
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [syncQueueCount, setSyncQueueCount] = useState<number>(0);
@@ -396,13 +397,13 @@ const App: React.FC = () => {
     <div className="relative min-h-screen">
       {isAdminView ? (
         <DashboardLayout currentUser={currentUser} activeTab={activeTab as AdminTab} onTabChange={setActiveTab} onLogout={() => { setIsAuthenticated(false); setCurrentUser(null); setForcedRoleView(null); localStorage.clear(); sessionStorage.clear(); }} alerts={activeAlerts} backendOffline={!isOnline || backendError}>
-          {activeTab === AdminTab.USERS ? <UsersPage t={t} currentUser={currentUser} users={users} setUsers={setUsers} facilities={facilities} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} onSync={u => sync('users', u)} /> :
+          {activeTab === AdminTab.USERS ? <UsersPage currentUser={currentUser} users={users} setUsers={setUsers} facilities={facilities} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} onSync={u => sync('users', u)} onSyncDelete={id => sync('users', id, 'DELETE')} /> :
            activeTab === AdminTab.FACILITIES ? <FacilitiesPage t={t} facilities={facilities} setFacilities={setFacilities} facilityTypes={facilityTypes} cookingMethods={cookingMethods} users={users} fridges={fridges} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} onSync={f => sync('facilities', f)} onTabChange={setActiveTab as any} /> :
            activeTab === AdminTab.REFRIGERATORS ? <RefrigeratorsPage t={t} facilities={facilities} setFacilities={setFacilities} fridges={fridges} setFridges={setFridges} fridgeTypes={fridgeTypes} users={users} setUsers={setUsers} setAssignments={setAssignments} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} setAlerts={setAlerts} onSync={r => sync('refrigerators', r)} onSyncDelete={id => sync('refrigerators', id, 'DELETE')} /> :
            activeTab === AdminTab.MENUS ? <MenusPage t={t} menus={menus} setMenus={setMenus} onSync={m => sync('menus', m)} onSyncDelete={id => sync('menus', id, 'DELETE')} /> :
            activeTab === AdminTab.FORM_CREATOR ? <FormCreatorPage t={t} forms={forms} setForms={setForms} onSync={f => sync('form-templates', f)} onSyncDelete={id => sync('form-templates', id, 'DELETE')} /> :
            activeTab === AdminTab.DOCUMENTS ? <DocumentsPage t={t} documents={documents} setDocuments={setDocuments} onSync={d => sync('documents', d)} onSyncDelete={id => sync('documents', id, 'DELETE')} onLog={(a, e, d) => sync('audit-logs', { userId: currentUser.id, userName: currentUser.name, action: a, entity: e, details: d })} /> :
-           activeTab === AdminTab.PERSONNEL ? <PersonnelPage t={t} personnel={personnel} setPersonnel={setPersonnel} facilities={facilities} personnelDocs={personnelDocs} onSync={p => sync('personnel', p)} onSyncDelete={id => sync('personnel', id, 'DELETE')} onDocDelete={id => sync('personnel-docs', id, 'DELETE')} onDocUpdate={d => sync('personnel-docs', d)} onDocUpload={d => sync('personnel-docs', d)} /> :
+           activeTab === AdminTab.PERSONNEL ? <PersonnelPage personnel={personnel} setPersonnel={setPersonnel} facilities={facilities} personnelDocs={personnelDocs} onSync={p => sync('personnel', p)} onSyncDelete={id => sync('personnel', id, 'DELETE')} onDocDelete={id => sync('personnel-docs', id, 'DELETE')} onDocUpdate={d => sync('personnel-docs', d)} onDocUpload={d => sync('personnel-docs', d)} /> :
            activeTab === AdminTab.ASSIGNMENTS ? <AssignmentsPage t={t} assignments={assignments} setAssignments={setAssignments} users={users} facilities={facilities} forms={forms} menus={menus} facilityTypes={facilityTypes} onTabChange={setActiveTab as any} onSync={a => sync('assignments', a)} onSyncDelete={id => sync('assignments', id, 'DELETE')} /> :
            activeTab === AdminTab.REPORTS ? <ReportsPage t={t} currentUser={currentUser} readings={readings} formResponses={formResponses} menus={menus} fridges={fridges} users={users} facilities={facilities} excludedFacilities={excludedFacilities} forms={forms} assignments={assignments} /> :
            activeTab === AdminTab.FACILITY_ANALYTICS ? <FacilityAnalyticsPage t={t} facilities={facilities} alerts={alerts} readings={readings} facilityTypes={facilityTypes} /> :
@@ -415,11 +416,11 @@ const App: React.FC = () => {
           }
         </DashboardLayout>
       ) : (
-        <UserDashboardLayout t={t} activeTab={activeTab} onTabChange={setActiveTab} onLogout={() => { setIsAuthenticated(false); setCurrentUser(null); setForcedRoleView(null); localStorage.clear(); sessionStorage.clear(); }} assignments={assignments} currentUser={currentUser!} forms={forms} formResponses={formResponses} readings={readings} holidays={holidays} isOnline={isOnline && !backendError} isSyncing={isSyncingInProgress} offlineQueueCount={syncQueueCount} facilities={facilities} facilityTypes={facilityTypes}>
+        <UserDashboardLayout activeTab={activeTab} onTabChange={setActiveTab} onLogout={() => { setIsAuthenticated(false); setCurrentUser(null); setForcedRoleView(null); localStorage.clear(); sessionStorage.clear(); }} assignments={assignments} currentUser={currentUser!} forms={forms} formResponses={formResponses} readings={readings} holidays={holidays} isOnline={isOnline && !backendError} isSyncing={isSyncingInProgress} offlineQueueCount={syncQueueCount} facilities={facilities} facilityTypes={facilityTypes}>
           {activeTab === 'user_workspace' ? <UserWorkspace t={t} user={currentUser} fridges={fridges} menus={menus} assignments={assignments} readings={readings} onSave={(d, a) => { setReadings(prev => [d, ...prev]); sync('readings', d); if(a) { setAlerts(prev => [a, ...prev]); sync('alerts', a); } }} fridgeTypes={fridgeTypes} cookingMethods={cookingMethods} facilities={facilities} excludedFacilities={excludedFacilities} facilityTypes={facilityTypes} onViolation={()=>{}} formResponses={formResponses} /> :
            activeTab === 'user_forms' ? <UserForms t={t} user={currentUser} forms={forms} assignments={assignments} excludedFacilities={excludedFacilities} facilityTypes={facilityTypes} facilities={facilities} onSave={(d) => { setFormResponses(prev => [d, ...prev]); sync('form-responses', d); }} formResponses={formResponses} /> :
            activeTab === 'user_library' ? <UserLibrary t={t} documents={documents} /> :
-           activeTab === 'user_academy' ? <UserAcademy t={t} /> :
+           activeTab === 'user_academy' ? <UserAcademy /> :
            activeTab === 'user_personnel' ? <UserPersonnelDocs t={t} personnel={personnel} personnelDocs={personnelDocs} onUpload={d => sync('personnel-docs', d)} onPersonnelUpdate={p => { setPersonnel(prev => prev.map(pers => pers.id === p.id ? p : pers)); sync('personnel', p); }} activeFacilityId={currentUser?.facilityId || ''} /> :
            <UserReports t={t} user={currentUser} readings={readings} menus={menus} fridges={fridges} fridgeTypes={fridgeTypes} cookingMethods={cookingMethods} facilities={facilities} assignments={assignments} formResponses={formResponses} excludedFacilities={excludedFacilities} forms={forms} facilityTypes={facilityTypes} lostDays={[]} />}
         </UserDashboardLayout>

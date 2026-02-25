@@ -18,7 +18,7 @@ interface TelegramConfig {
 }
 
 interface BackupSyncPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   users: User[];
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   facilities: Facility[];

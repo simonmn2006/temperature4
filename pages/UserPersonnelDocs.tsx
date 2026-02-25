@@ -3,7 +3,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { TranslationSet, Personnel, PersonnelDocument, PersonnelDocType } from '../types';
 
 interface UserPersonnelDocsProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   personnel: Personnel[];
   personnelDocs: PersonnelDocument[];
   onUpload: (doc: PersonnelDocument) => void;

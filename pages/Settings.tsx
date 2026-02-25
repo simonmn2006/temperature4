@@ -15,7 +15,7 @@ import { GermanCalendarPicker } from '../components/GermanCalendarPicker';
 type SettingsSection = 'holidays' | 'cookingMethods' | 'fridgeTypes' | 'facilityTypes' | 'excludedFacilities' | 'legal';
 
 export const SettingsPage: React.FC<{ 
-  t: TranslationSet; 
+  t: (key: string) => string; 
   facilities: Facility[];
   fridgeTypes: RefrigeratorType[];
   setFridgeTypes: React.Dispatch<React.SetStateAction<RefrigeratorType[]>>;

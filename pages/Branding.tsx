@@ -11,7 +11,7 @@ export const BrandingPage: React.FC = () => {
 
   const handleSaveBranding = async () => {
     await updateBranding(localSettings);
-    alert('Branding-Einstellungen gespeichert!');
+    alert(t('branding.saved'));
   };
 
   return (
@@ -22,7 +22,7 @@ export const BrandingPage: React.FC = () => {
             <Palette className="w-7 h-7 text-emerald-600" />
             {t('admin.branding')}
           </h2>
-          <p className="text-slate-500">Passen Sie das Erscheinungsbild und die Sprache der Anwendung an.</p>
+          <p className="text-slate-500">{t('branding.description')}</p>
         </div>
         <div className="flex gap-3">
           <button
@@ -53,7 +53,7 @@ export const BrandingPage: React.FC = () => {
             activeSubTab === 'general' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Allgemein
+          {t('branding.general')}
         </button>
         <button
           onClick={() => setActiveSubTab('translations')}
@@ -61,7 +61,7 @@ export const BrandingPage: React.FC = () => {
             activeSubTab === 'translations' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          Übersetzungen
+          {t('branding.translations')}
         </button>
       </div>
 
@@ -70,7 +70,7 @@ export const BrandingPage: React.FC = () => {
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-3">
               <Settings className="w-5 h-5 text-slate-400" />
-              Identität
+              {t('branding.identity')}
             </h3>
             <div className="space-y-4">
               <div>
@@ -98,7 +98,7 @@ export const BrandingPage: React.FC = () => {
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2 border-b pb-3">
               <Palette className="w-5 h-5 text-slate-400" />
-              Design & Sprache
+              {t('branding.design')}
             </h3>
             <div className="space-y-4">
               <div>
@@ -154,16 +154,16 @@ export const BrandingPage: React.FC = () => {
               </div>
             </div>
             <p className="text-xs text-slate-500 italic">
-              Tipp: Aktivieren Sie den "Bearbeitungsmodus" oben rechts, um Texte direkt in der App zu ändern.
+              {t('branding.tip')}
             </p>
           </div>
           <div className="max-h-[600px] overflow-y-auto">
             <table className="w-full text-left">
               <thead className="sticky top-0 bg-white shadow-sm">
                 <tr className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                  <th className="px-6 py-4">Schlüssel</th>
-                  <th className="px-6 py-4">Standard-Text</th>
-                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">{t('branding.key')}</th>
+                  <th className="px-6 py-4">{t('branding.defaultText')}</th>
+                  <th className="px-6 py-4">{t('branding.status')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -174,7 +174,7 @@ export const BrandingPage: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-emerald-600 text-xs font-medium">
                         <Check className="w-3 h-3" />
-                        Bereit
+                        {t('branding.ready')}
                       </div>
                     </td>
                   </tr>

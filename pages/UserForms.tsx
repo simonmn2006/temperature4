@@ -78,7 +78,7 @@ const SignaturePad: React.FC<{ onEnd: () => void; canvasRef: React.RefObject<HTM
 };
 
 interface UserFormsProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   user: User;
   forms: FormTemplate[];
   assignments: Assignment[];

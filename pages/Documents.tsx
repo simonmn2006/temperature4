@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { TranslationSet, Document, AuditLog, DocumentCategory } from '../types';
 
 interface DocumentsPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   documents: Document[];
   setDocuments: React.Dispatch<React.SetStateAction<Document[]>>;
   onSync: (doc: Document) => void;

@@ -27,7 +27,7 @@ interface ResourceConfig {
 }
 
 interface AssignmentsPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   assignments: Assignment[];
   setAssignments: React.Dispatch<React.SetStateAction<Assignment[]>>;
   users: User[];

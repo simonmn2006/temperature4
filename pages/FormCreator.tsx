@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { TranslationSet, FormTemplate, FormQuestion, QuestionType, FormOption } from '../types';
 
 interface FormCreatorPageProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   forms: FormTemplate[];
   setForms: React.Dispatch<React.SetStateAction<FormTemplate[]>>;
   onSync: (form: FormTemplate) => void;

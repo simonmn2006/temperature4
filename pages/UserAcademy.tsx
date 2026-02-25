@@ -1,81 +1,81 @@
 
 import React, { useState } from 'react';
-import { TranslationSet } from '../types';
+import { T } from '../src/BrandingContext';
 
-export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
+export const UserAcademy: React.FC = () => {
   const [activeLesson, setActiveLesson] = useState(0);
 
   const lessons = [
     {
-      title: 'Temperaturen messen',
+      titleKey: 'academy.lesson1.title',
       icon: '🌡️',
       color: 'blue',
-      description: 'So wird die tägliche Liste ausgefüllt:',
+      descriptionKey: 'academy.lesson1.desc',
       steps: [
-        { t: 'Wähle dein Gerät aus der Liste aus.', i: '👆' },
-        { t: 'Tippe auf Plus oder Minus, um die Temperatur einzustellen.', i: '➕' },
-        { t: 'Ist die Zahl ROT? Schreibe kurz auf, warum das so ist (z.B. "Tür offen").', i: '✍️' },
-        { t: 'Tippe auf das SCHLOSS-Symbol zum Speichern. Fertig!', i: '🔒' }
+        { tKey: 'academy.lesson1.step1', i: '👆' },
+        { tKey: 'academy.lesson1.step2', i: '➕' },
+        { tKey: 'academy.lesson1.step3', i: '✍️' },
+        { tKey: 'academy.lesson1.step4', i: '🔒' }
       ]
     },
     {
-      title: 'Checklisten ausfüllen',
+      titleKey: 'academy.lesson2.title',
       icon: '📝',
       color: 'emerald',
-      description: 'Deine Aufgaben-Liste für heute:',
+      descriptionKey: 'academy.lesson2.desc',
       steps: [
-        { t: 'Öffne eine Checkliste mit dem "Starten" Knopf.', i: '🚀' },
-        { t: 'Tippe einfach auf JA oder NEIN oder die richtige Antwort.', i: '🔘' },
-        { t: 'Unterschreibe am Ende mit dem Finger im Feld.', i: '🖐️' },
-        { t: 'Klicke auf ABSENDEN. Die Liste verschwindet, wenn sie fertig ist.', i: '✅' }
+        { tKey: 'academy.lesson2.step1', i: '🚀' },
+        { tKey: 'academy.lesson2.step2', i: '🔘' },
+        { tKey: 'academy.lesson2.step3', i: '🖐️' },
+        { tKey: 'academy.lesson2.step4', i: '✅' }
       ]
     },
     {
-      title: 'Meine Berichte',
+      titleKey: 'academy.lesson3.title',
       icon: '📊',
       color: 'indigo',
-      description: 'Deine Historie einsehen:',
+      descriptionKey: 'academy.lesson3.desc',
       steps: [
-        { t: 'Gehe auf den Tab "Meine Berichte" oben im Menü.', i: '📂' },
-        { t: 'Wähle den Zeitraum aus (z.B. letzte Woche).', i: '📅' },
-        { t: 'Alle deine Messungen erscheinen in einer Liste.', i: '📜' },
-        { t: 'Rote Einträge ("Lost Day") zeigen dir, wo eine Liste vergessen wurde.', i: '🚨' }
+        { tKey: 'academy.lesson3.step1', i: '📂' },
+        { tKey: 'academy.lesson3.step2', i: '📅' },
+        { tKey: 'academy.lesson3.step3', i: '📜' },
+        { tKey: 'academy.lesson3.step4', i: '🚨' }
       ]
     },
     {
-      title: 'Dokumente hochladen',
+      titleKey: 'academy.lesson4.title',
       icon: '🗂️',
       color: 'rose',
-      description: 'Gesundheitsausweis & Co. einreichen:',
+      descriptionKey: 'academy.lesson4.desc',
       steps: [
-        { t: 'Wähle deinen Namen in "Meine Dokumente" aus der Liste.', i: '👤' },
-        { t: 'Klicke auf "DATEI" neben der Dokumenten-Art.', i: '📂' },
-        { t: 'Wähle ein Dokument aus oder nutze die Kamera deines Geräts.', i: '📸' },
-        { t: 'Tippe auf "Speichern". Die Verwaltung erhält es sofort.', i: '💾' }
+        { tKey: 'academy.lesson4.step1', i: '👤' },
+        { tKey: 'academy.lesson4.step2', i: '📂' },
+        { tKey: 'academy.lesson4.step3', i: '📸' },
+        { tKey: 'academy.lesson4.step4', i: '💾' }
       ]
     },
     {
-      title: 'Handbücher lesen',
+      titleKey: 'academy.lesson5.title',
       icon: '📚',
       color: 'orange',
-      description: 'Wissen, wie es geht:',
+      descriptionKey: 'academy.lesson5.desc',
       steps: [
-        { t: 'Suche dir ein Thema aus (z.B. Kochen oder Sicherheit).', i: '🔍' },
-        { t: 'Tippe auf das Handbuch, das du lesen willst.', i: '📂' },
-        { t: 'Das PDF öffnet sich sofort groß auf dem Bildschirm.', i: '📱' },
-        { t: 'Schließe es mit dem X oben rechts, wenn du fertig bist.', i: '✕' }
+        { tKey: 'academy.lesson5.step1', i: '🔍' },
+        { tKey: 'academy.lesson5.step2', i: '📂' },
+        { tKey: 'academy.lesson5.step3', i: '📱' },
+        { tKey: 'academy.lesson5.step4', i: '✕' }
       ]
     },
     {
-      title: 'PIN & Sicherheit',
+      titleKey: 'academy.lesson6.title',
       icon: '🔑',
       color: 'amber',
-      description: 'Dein Zugang zum Tresor:',
+      descriptionKey: 'academy.lesson6.desc',
       steps: [
-        { t: 'Wähle deinen Namen aus und lege eine 6-stellige PIN fest.', i: '🆕' },
-        { t: 'Merke dir die PIN gut! Du brauchst sie für alle Dokumente.', i: '🧠' },
-        { t: 'PIN vergessen? Tippe auf "PIN vergessen?" unter dem Eingabefeld.', i: '❓' },
-        { t: 'Die Verwaltung erhält eine Nachricht und setzt deine PIN zurück.', i: '📡' }
+        { tKey: 'academy.lesson6.step1', i: '🆕' },
+        { tKey: 'academy.lesson6.step2', i: '🧠' },
+        { tKey: 'academy.lesson6.step3', i: '❓' },
+        { tKey: 'academy.lesson6.step4', i: '📡' }
       ]
     }
   ];
@@ -87,9 +87,11 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
       <header className="bg-slate-900 text-white p-12 rounded-[4rem] relative overflow-hidden shadow-2xl">
          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/20 blur-[80px] rounded-full translate-x-1/2 -translate-y-1/2" />
          <div className="relative z-10">
-            <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-4">Akademie</h1>
+            <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-4">
+              <T tkey="academy.title" />
+            </h1>
             <p className="text-slate-400 text-lg font-medium max-w-lg">
-               Hier lernst du in wenigen Sekunden, wie du das System perfekt nutzt.
+               <T tkey="academy.subtitle" />
             </p>
          </div>
       </header>
@@ -105,7 +107,6 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
                    ? `bg-${lesson.color}-600 text-white shadow-xl scale-110 rotate-3` 
                    : 'bg-slate-50 dark:bg-slate-800 text-slate-300 hover:text-slate-500'
                }`}
-               title={lesson.title}
             >
                {lesson.icon}
             </button>
@@ -117,8 +118,12 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
             <div className="flex items-center space-x-6">
                <span className="text-6xl">{current.icon}</span>
                <div>
-                  <h2 className={`text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter`}>{current.title}</h2>
-                  <p className="text-slate-500 text-xl font-medium mt-1">{current.description}</p>
+                  <h2 className={`text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter`}>
+                    <T tkey={current.titleKey} />
+                  </h2>
+                  <p className="text-slate-500 text-xl font-medium mt-1">
+                    <T tkey={current.descriptionKey} />
+                  </p>
                </div>
             </div>
          </div>
@@ -129,8 +134,12 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
                      {step.i}
                   </div>
                   <div className="space-y-1">
-                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Schritt {idx + 1}</p>
-                     <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 leading-tight">{step.t}</p>
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                       <T tkey="academy.step" /> {idx + 1}
+                     </p>
+                     <p className="text-2xl font-bold text-slate-800 dark:text-slate-200 leading-tight">
+                        <T tkey={step.tKey} />
+                     </p>
                   </div>
                </div>
             ))}
@@ -138,7 +147,9 @@ export const UserAcademy: React.FC<{ t: TranslationSet }> = ({ t }) => {
       </div>
 
       <div className="bg-slate-100 dark:bg-slate-800/50 p-10 rounded-[3rem] text-center border-2 border-dashed border-slate-200 dark:border-slate-700">
-         <p className="text-slate-400 font-black uppercase text-xs tracking-widest">Tipp: Wenn alles erledigt ist, leuchtet der Pokal (🏆) im Menü.</p>
+         <p className="text-slate-400 font-black uppercase text-xs tracking-widest">
+            <T tkey="academy.tip" />
+         </p>
       </div>
     </div>
   );

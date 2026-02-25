@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { TranslationSet, Personnel, Facility, PersonnelDocType, PersonnelDocument } from '../types';
+import { Personnel, Facility, PersonnelDocType, PersonnelDocument } from '../types';
+import { T, useBranding } from '../src/BrandingContext';
 
 interface PersonnelPageProps {
-  t: TranslationSet;
   personnel: Personnel[];
   setPersonnel: React.Dispatch<React.SetStateAction<Personnel[]>>;
   facilities: Facility[];
@@ -15,15 +15,17 @@ interface PersonnelPageProps {
   onDocUpload?: (doc: PersonnelDocument) => void;
 }
 
-const DOC_TYPES: { type: PersonnelDocType; icon: string; label: string }[] = [
-  { type: 'Gesundheitsausweis', icon: '🩺', label: 'G-Ausweis' },
-  { type: 'Infektionsschutzschulung', icon: '🦠', label: 'Infektionssch.' },
-  { type: 'Masernschutz', icon: '💉', label: 'Masern' }
-];
-
 export const PersonnelPage: React.FC<PersonnelPageProps> = ({ 
-  t, personnel, setPersonnel, facilities, personnelDocs, onSync, onSyncDelete, onDocDelete, onDocUpdate, onDocUpload 
+  personnel, setPersonnel, facilities, personnelDocs, onSync, onSyncDelete, onDocDelete, onDocUpdate, onDocUpload 
 }) => {
+  const { t } = useBranding();
+
+  const DOC_TYPES: { type: PersonnelDocType; icon: string; label: string }[] = [
+    { type: 'Gesundheitsausweis', icon: '🩺', label: t('personnel.doc.health') },
+    { type: 'Infektionsschutzschulung', icon: '🦠', label: t('personnel.doc.infection') },
+    { type: 'Masernschutz', icon: '💉', label: t('personnel.doc.measles') }
+  ];
+
   const [searchTerm, setSearchTerm] = useState('');
   const [facilityFilter, setFacilityFilter] = useState('all');
   const [facilityFilterSearch, setFacilityFilterSearch] = useState('');
@@ -178,7 +180,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
   const handleResetPin = async (personId: string) => {
     setConfirmAction({
-      text: t.vault.adminReset + "?",
+      text: t('vault.adminReset') + "?",
       onConfirm: async () => {
         try {
           const res = await fetch(`/api/personnel/${personId}/reset-pin`, {
@@ -280,17 +282,23 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
       <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white dark:bg-slate-900 p-8 rounded-[3rem] border border-slate-100 dark:border-slate-800 shadow-sm">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Personal & Compliance</h1>
-          <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">Stammdaten & Pflichtdokumente</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">
+            <T tkey="personnel.title" />
+          </h1>
+          <p className="text-sm text-slate-500 font-bold uppercase tracking-widest mt-1">
+            <T tkey="personnel.subtitle" />
+          </p>
         </div>
         <div className="flex flex-wrap gap-4 items-center">
            <button 
              onClick={() => setShowInactive(!showInactive)}
              className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border ${showInactive ? 'bg-slate-900 text-white border-slate-900 shadow-lg' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'}`}
            >
-             {showInactive ? '✅ Inaktive eingeblendet' : '👁️ Inaktive einblenden'}
+             {showInactive ? t('personnel.status.inactive.hide') : t('personnel.status.inactive.show')}
            </button>
-           <button onClick={() => openModal()} className="bg-blue-600 text-white px-10 py-3 rounded-2xl font-black shadow-xl shadow-blue-500/20 uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-transform">+ Person anlegen</button>
+           <button onClick={() => openModal()} className="bg-blue-600 text-white px-10 py-3 rounded-2xl font-black shadow-xl shadow-blue-500/20 uppercase text-xs tracking-widest hover:scale-105 active:scale-95 transition-transform">
+             <T tkey="personnel.add" />
+           </button>
         </div>
       </header>
 
@@ -299,7 +307,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
           <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 text-xl">🔍</span>
           <input 
             type="text" 
-            placeholder="Nach Namen suchen..." 
+            placeholder={t('personnel.search')} 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
             className="w-full pl-14 pr-6 py-4 bg-white dark:bg-slate-900 rounded-[1.75rem] border border-slate-200 dark:border-slate-800 outline-none font-bold text-base shadow-sm focus:ring-4 focus:ring-blue-500/5 transition-all" 
@@ -312,7 +320,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
             onClick={() => setIsFilterDropdownOpen(true)}
             className="w-full pl-14 pr-10 py-4 bg-white dark:bg-slate-900 rounded-[1.75rem] border border-slate-200 dark:border-slate-800 outline-none font-black text-xs shadow-sm focus:ring-4 focus:ring-blue-500/5 transition-all cursor-pointer flex items-center uppercase"
           >
-            {facilityFilter === 'all' ? 'Alle Standorte' : facilities.find(f => f.id === facilityFilter)?.name || 'Alle Standorte'}
+            {facilityFilter === 'all' ? t('personnel.filter.all') : facilities.find(f => f.id === facilityFilter)?.name || t('personnel.filter.all')}
           </div>
           {isFilterDropdownOpen && (
             <div className="absolute top-full left-0 w-full mt-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[1.75rem] shadow-2xl z-[60] overflow-hidden animate-in slide-in-from-top-2">
@@ -320,7 +328,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                   <input 
                     type="text"
                     autoFocus
-                    placeholder="Standort filtern..."
+                    placeholder={t('personnel.filter.facility')}
                     value={facilityFilterSearch}
                     onChange={e => setFacilityFilterSearch(e.target.value)}
                     className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold text-xs outline-none"
@@ -331,7 +339,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                     onClick={() => { setFacilityFilter('all'); setFacilityFilterSearch(''); setIsFilterDropdownOpen(false); }}
                     className={`w-full text-left px-5 py-3 text-[10px] font-black uppercase hover:bg-slate-50 dark:hover:bg-slate-800 border-b last:border-0 border-slate-50 dark:border-slate-800 ${facilityFilter === 'all' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-500'}`}
                   >
-                    Alle Standorte
+                    <T tkey="personnel.filter.all" />
                   </button>
                   {filteredFacilitiesList.map(f => (
                     <button 
@@ -373,10 +381,14 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight uppercase tracking-tight">{p.firstName} {p.lastName}</h3>
                <div className="flex flex-wrap gap-2 mt-2">
                  {p.status === 'Inactive' && (
-                   <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-slate-200">Personal Inaktiv</span>
+                   <span className="px-3 py-1 bg-slate-100 text-slate-500 rounded-xl text-[9px] font-black uppercase border border-slate-200">
+                     <T tkey="personnel.card.inactive" />
+                   </span>
                  )}
                  {!!p.isSpringer && (
-                   <span className="px-3 py-1 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase border border-blue-700 shadow-sm">Springer</span>
+                   <span className="px-3 py-1 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase border border-blue-700 shadow-sm">
+                     <T tkey="personnel.card.springer" />
+                   </span>
                  )}
                  {!!p.pinResetRequested && (
                    <button 
@@ -395,13 +407,17 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                       {facilities.find(f => f.id === fid)?.name || fid}
                    </span>
                 )) : (
-                   <span className="text-[10px] font-bold text-slate-400 uppercase italic">Kein Standort zugewiesen</span>
+                   <span className="text-[10px] font-bold text-slate-400 uppercase italic">
+                     <T tkey="personnel.card.noFacility" />
+                   </span>
                 )}
              </div>
 
              <div className="pt-8 border-t border-slate-50 dark:border-slate-800">
                 <div className="flex justify-between items-center mb-4">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Compliance Status</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    <T tkey="personnel.card.compliance" />
+                  </p>
                 </div>
                 <div className="flex gap-3">
                    {DOC_TYPES.map(doc => {
@@ -428,7 +444,9 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                <div className="flex items-center space-x-6">
                   <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-[1.5rem] flex items-center justify-center text-4xl shadow-inner">📄</div>
                   <div>
-                    <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Compliance-Management</h3>
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">
+                      <T tkey="personnel.docs.title" />
+                    </h3>
                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">{viewingDocsPerson.firstName} {viewingDocsPerson.lastName}</p>
                   </div>
                </div>
@@ -446,7 +464,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                              <h4 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{dt.type}</h4>
                           </div>
                           <label className="bg-blue-600 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-pointer shadow-lg hover:bg-blue-700 transition-colors">
-                             + Upload
+                             <T tkey="personnel.docs.upload" />
                              <input type="file" className="hidden" accept="application/pdf,image/*" onChange={(e) => handleAdminFileUpload(e, viewingDocsPerson.id, dt.type)} />
                           </label>
                        </div>
@@ -462,18 +480,20 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                                   )}
                                   
                                   <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2 p-4">
-                                     <button className="w-full bg-white text-slate-900 font-black text-[9px] uppercase tracking-widest py-2 rounded-xl">Ansehen</button>
+                                     <button className="w-full bg-white text-slate-900 font-black text-[9px] uppercase tracking-widest py-2 rounded-xl">
+                                       <T tkey="personnel.docs.view" />
+                                     </button>
                                      <button 
                                        onClick={(e) => { e.stopPropagation(); toggleDocVisibility(doc); }}
                                        className={`w-full font-black text-[9px] uppercase tracking-widest py-2 rounded-xl transition-colors ${doc.visibleToUser ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
                                      >
-                                       {doc.visibleToUser ? 'Verbergen' : 'Einblenden'}
+                                       {doc.visibleToUser ? t('personnel.docs.hide') : t('personnel.docs.show')}
                                      </button>
                                      <button 
                                        onClick={(e) => { e.stopPropagation(); setDocToDelete(doc); }}
                                        className="w-full bg-rose-600 text-white font-black text-[9px] uppercase tracking-widest py-2 rounded-xl hover:bg-rose-700 transition-colors"
                                      >
-                                       Löschen
+                                       <T tkey="personnel.docs.delete" />
                                      </button>
                                   </div>
                                </div>
@@ -494,7 +514,9 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
           <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[3.5rem] shadow-2xl flex flex-col relative text-left border border-white/10 overflow-hidden">
             <div className="p-10 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">{editingPerson ? 'Personen-Stamm bearbeiten' : 'Neue Person anlegen'}</h3>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">
+                {editingPerson ? <T tkey="personnel.modal.edit" /> : <T tkey="personnel.modal.new" />}
+              </h3>
             </div>
             
             <div className="p-10 space-y-10 overflow-y-auto max-h-[70vh] custom-scrollbar">
@@ -506,18 +528,24 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Vorname</label>
-                   <input type="text" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className={getFieldClass('firstName')} placeholder="Vorname..." />
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                     <T tkey="personnel.modal.firstName" />
+                   </label>
+                   <input type="text" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className={getFieldClass('firstName')} placeholder={t('personnel.modal.firstName') + "..."} />
                 </div>
                 <div className="space-y-2">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Nachname</label>
-                   <input type="text" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className={getFieldClass('lastName')} placeholder="Nachname..." />
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                     <T tkey="personnel.modal.lastName" />
+                   </label>
+                   <input type="text" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className={getFieldClass('lastName')} placeholder={t('personnel.modal.lastName') + "..."} />
                 </div>
               </div>
 
               {/* RESTORED DOCUMENT REQUIREMENT ICONS */}
               <div className="space-y-6">
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Erforderliche Dokumente</label>
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                   <T tkey="personnel.modal.requiredDocs" />
+                 </label>
                  <div className="grid grid-cols-3 gap-4">
                     {DOC_TYPES.map(dt => (
                       <button 
@@ -538,7 +566,9 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
               {/* RESTORED SEARCHABLE FACILITY DROPDOWN */}
               <div className="space-y-4" ref={facDropdownRef}>
-                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Zugeordnete Standorte</label>
+                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                   <T tkey="personnel.modal.facilities" />
+                 </label>
                  <div className="flex flex-wrap gap-2 mb-3">
                     {formData.facilityIds?.map(fid => (
                        <button key={fid} onClick={() => removeFacilityId(fid)} className="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase flex items-center space-x-2 shadow-sm hover:bg-rose-500 transition-colors">
@@ -554,7 +584,7 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                       onChange={e => { setFacilitySearch(e.target.value); setIsFacDropdownOpen(true); }}
                       onFocus={() => setIsFacDropdownOpen(true)}
                       className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold outline-none text-sm shadow-inner"
-                      placeholder="Standorte suchen & hinzufügen..."
+                      placeholder={t('personnel.modal.facilitySearch')}
                     />
                     {isFacDropdownOpen && modalFilteredFacilities.length > 0 && (
                       <div className="absolute bottom-full left-0 w-full mb-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-2xl z-[60] max-h-48 overflow-y-auto custom-scrollbar animate-in slide-in-from-bottom-2">
@@ -568,8 +598,12 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
               <div className="p-6 bg-slate-50 dark:bg-slate-800/30 rounded-[2rem] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Beschäftigungsstatus</p>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{formData.status === 'Active' ? 'Im Unternehmen aktiv' : 'Inaktiv / Ehemalig'}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                      <T tkey="personnel.modal.status" />
+                    </p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                      {formData.status === 'Active' ? t('personnel.modal.status.active') : t('personnel.modal.status.inactive')}
+                    </p>
                  </div>
                  <button 
                    onClick={() => setFormData({...formData, status: formData.status === 'Active' ? 'Inactive' : 'Active'})}
@@ -581,8 +615,12 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
 
               <div className="p-6 bg-slate-50 dark:bg-slate-800/30 rounded-[2rem] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
                  <div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Springer-Status</p>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{formData.isSpringer ? 'An allen Standorten sichtbar' : 'Nur an zugewiesenen Standorten'}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                      <T tkey="personnel.modal.springer" />
+                    </p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                      {formData.isSpringer ? t('personnel.modal.springer.on') : t('personnel.modal.springer.off')}
+                    </p>
                  </div>
                  <button 
                    onClick={() => setFormData({...formData, isSpringer: !formData.isSpringer})}
@@ -595,22 +633,30 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
               {editingPerson && editingPerson.vaultPin && (
                 <div className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-[2rem] border border-amber-100 dark:border-amber-800/30 flex items-center justify-between">
                    <div>
-                      <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Tresor-Sicherheit</p>
-                      <p className="text-sm font-bold text-amber-900 dark:text-amber-200">PIN ist aktiv gesetzt</p>
+                      <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">
+                        <T tkey="personnel.modal.vault" />
+                      </p>
+                      <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                        <T tkey="personnel.modal.vault.active" />
+                      </p>
                    </div>
                    <button 
                      onClick={() => handleResetPin(editingPerson.id)}
                      className="px-4 py-2 bg-amber-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-700 transition-all"
                    >
-                      {t.vault.adminReset}
+                      {t('vault.adminReset')}
                    </button>
                 </div>
               )}
             </div>
 
             <div className="p-8 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end space-x-4">
-              <button onClick={() => setIsModalOpen(false)} className="px-8 py-4 text-slate-500 font-black uppercase text-xs">Abbrechen</button>
-              <button onClick={handleSave} className="bg-blue-600 text-white px-12 py-4 rounded-[1.25rem] font-black shadow-xl hover:scale-105 active:scale-95 transition-transform uppercase text-xs">Speichern</button>
+              <button onClick={() => setIsModalOpen(false)} className="px-8 py-4 text-slate-500 font-black uppercase text-xs">
+                <T tkey="common.cancel" />
+              </button>
+              <button onClick={handleSave} className="bg-blue-600 text-white px-12 py-4 rounded-[1.25rem] font-black shadow-xl hover:scale-105 active:scale-95 transition-transform uppercase text-xs">
+                <T tkey="common.save" />
+              </button>
             </div>
           </div>
         </div>
@@ -623,8 +669,12 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
               <div className="flex items-center gap-5">
                  <span className="text-3xl">📄</span>
                  <div>
-                    <h2 className="text-xl font-black uppercase tracking-tighter leading-tight">{previewDoc.type} Vorschau</h2>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Erfasst am {new Date(previewDoc.createdAt).toLocaleDateString('de-DE')}</p>
+                    <h2 className="text-xl font-black uppercase tracking-tighter leading-tight">
+                      <T tkey="personnel.docs.preview.title" />
+                    </h2>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                      <T tkey="personnel.docs.preview.date" /> {new Date(previewDoc.createdAt).toLocaleDateString('de-DE')}
+                    </p>
                  </div>
               </div>
               <div className="flex items-center gap-3">
@@ -632,19 +682,19 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
                   onClick={() => handleDownload(previewDoc)} 
                   className="px-6 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-blue-600 transition-all flex items-center gap-3 border border-white/5"
                  >
-                   <span>💾</span> <span>Speichern</span>
+                   <span>💾</span> <span><T tkey="personnel.docs.preview.save" /></span>
                  </button>
                  <button 
                   onClick={() => handlePrint(previewDoc)} 
                   className="px-6 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-emerald-600 transition-all flex items-center gap-3 border border-white/5"
                  >
-                   <span>🖨️</span> <span>Drucken</span>
+                   <span>🖨️</span> <span><T tkey="personnel.docs.preview.print" /></span>
                  </button>
                  <button 
                   onClick={() => setPreviewDoc(null)} 
                   className="px-6 py-4 bg-white/10 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-rose-600 transition-all flex items-center gap-3 border border-white/5 ml-4"
                  >
-                   <span>✕</span> <span>Schließen</span>
+                   <span>✕</span> <span><T tkey="personnel.docs.preview.close" /></span>
                  </button>
               </div>
            </div>
@@ -663,11 +713,17 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
         <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6 z-[200] animate-in fade-in duration-300">
            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[4rem] p-12 text-center shadow-2xl relative overflow-hidden border border-rose-500/20">
               <div className="w-24 h-24 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-full flex items-center justify-center text-5xl mx-auto mb-8 shadow-inner animate-pulse">☢️</div>
-              <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 uppercase tracking-tighter">Person löschen?</h3>
+              <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 uppercase tracking-tighter">
+                <T tkey="personnel.delete.title" />
+              </h3>
               <p className="text-slate-500 dark:text-slate-400 mb-10 font-bold leading-relaxed text-base">Dauerhaft aus dem System entfernen?</p>
               <div className="flex flex-col gap-4">
-                 <button onClick={() => { setPersonnel(prev => prev.filter(p => p.id !== personToDelete.id)); onSyncDelete(personToDelete.id); setPersonToDelete(null); }} className="w-full bg-rose-600 text-white font-black py-5 rounded-[1.75rem] uppercase text-sm tracking-widest shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition-colors">JA, LÖSCHEN</button>
-                 <button onClick={() => setPersonToDelete(null)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black py-5 rounded-[1.75rem] uppercase text-sm tracking-widest hover:bg-slate-200 transition-colors">Abbrechen</button>
+                 <button onClick={() => { setPersonnel(prev => prev.filter(p => p.id !== personToDelete.id)); onSyncDelete(personToDelete.id); setPersonToDelete(null); }} className="w-full bg-rose-600 text-white font-black py-5 rounded-[1.75rem] uppercase text-sm tracking-widest shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition-colors">
+                   <T tkey="personnel.delete.confirm" />
+                 </button>
+                 <button onClick={() => setPersonToDelete(null)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black py-5 rounded-[1.75rem] uppercase text-sm tracking-widest hover:bg-slate-200 transition-colors">
+                   <T tkey="common.cancel" />
+                 </button>
               </div>
            </div>
         </div>
@@ -677,10 +733,16 @@ export const PersonnelPage: React.FC<PersonnelPageProps> = ({
         <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-6 z-[300] animate-in fade-in duration-300">
            <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-[3rem] p-10 text-center shadow-2xl relative border border-rose-500/20">
               <div className="w-20 h-20 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">🗑️</div>
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Dokument löschen?</h3>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">
+                <T tkey="personnel.docs.delete" />?
+              </h3>
               <div className="flex flex-col gap-3">
-                 <button onClick={confirmDeleteDoc} className="w-full bg-rose-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest">Löschen</button>
-                 <button onClick={() => setDocToDelete(null)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black py-4 rounded-2xl uppercase text-xs tracking-widest">Abbrechen</button>
+                 <button onClick={confirmDeleteDoc} className="w-full bg-rose-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase text-xs tracking-widest">
+                   <T tkey="personnel.docs.delete" />
+                 </button>
+                 <button onClick={() => setDocToDelete(null)} className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black py-4 rounded-2xl uppercase text-xs tracking-widest">
+                   <T tkey="common.cancel" />
+                 </button>
               </div>
            </div>
         </div>

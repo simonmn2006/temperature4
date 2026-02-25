@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { TranslationSet, User } from '../types';
 
 interface LoginProps {
-  t: TranslationSet;
+  t: (key: string) => string;
   onLogin: (username: string, password?: string, stayLoggedIn?: boolean) => void;
   users: User[];
   legalTexts: { imprint: string; privacy: string };
@@ -95,7 +95,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.username}</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t('login.username')}</label>
               <input 
                 type="text" 
                 value={username} 
@@ -106,7 +106,7 @@ export const Login: React.FC<LoginProps> = ({ t, onLogin, backendOffline, loginE
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t.password}</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">{t('login.password')}</label>
               <input 
                 type="password" 
                 value={password} 

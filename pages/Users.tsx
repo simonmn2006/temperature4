@@ -1,18 +1,20 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { TranslationSet, User, Facility, AuditLog } from '../types';
+import { User, Facility, AuditLog } from '../types';
+import { T, useBranding } from '../src/BrandingContext';
 
 interface UsersPageProps {
-  t: TranslationSet;
   currentUser: User;
   users: User[];
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   facilities: Facility[];
   onLog: (action: AuditLog['action'], entity: string, details: string) => void;
   onSync: (user: User) => void;
+  onSyncDelete: (id: string) => void;
 }
 
-export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, setUsers, facilities, onLog, onSync }) => {
+export const UsersPage: React.FC<UsersPageProps> = ({ currentUser, users, setUsers, facilities, onLog, onSync, onSyncDelete }) => {
+  const { t } = useBranding();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,24 +144,36 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">Benutzer-Stamm</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Verwaltung von Mitarbeitern und Administration</p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter italic">
+            <T tkey="admin.users.title" />
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+            <T tkey="admin.users.subtitle" />
+          </p>
         </div>
-        <button onClick={() => openModal()} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black shadow-xl uppercase text-xs">+ Nutzer hinzufügen</button>
+        <button onClick={() => openModal()} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black shadow-xl uppercase text-xs">
+          <T tkey="admin.users.add" />
+        </button>
       </div>
 
       <div className="relative w-full max-w-2xl text-left">
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-        <input type="text" placeholder="Suchen..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 outline-none font-bold text-sm h-[52px]" />
+        <input type="text" placeholder={t('admin.users.search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 outline-none font-bold text-sm h-[52px]" />
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
         <table className="w-full text-left">
           <thead className="bg-slate-50 dark:bg-slate-800/50">
             <tr>
-              <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Nutzer</th>
-              <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Zuweisung</th>
-              <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Aktionen</th>
+              <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                <T tkey="admin.users.table.user" />
+              </th>
+              <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                <T tkey="admin.users.table.assignment" />
+              </th>
+              <th className="px-8 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">
+                <T tkey="admin.users.table.actions" />
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
@@ -184,8 +198,22 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                      ))}
                   </div>
                 </td>
-                <td className="px-8 py-6 text-right">
+                <td className="px-8 py-6 text-right space-x-2">
                   <button onClick={() => openModal(user)} className="p-2 text-blue-600 hover:scale-110 transition-transform">✏️</button>
+                  {user.id !== currentUser.id && (
+                    <button 
+                      onClick={() => {
+                        if (window.confirm(t('admin.users.delete.confirm'))) {
+                          setUsers(prev => prev.filter(u => u.id !== user.id));
+                          onSyncDelete(user.id);
+                          onLog('DELETE', 'USERS', `Nutzer ${user.name} gelöscht`);
+                        }
+                      }} 
+                      className="p-2 text-rose-600 hover:scale-110 transition-transform"
+                    >
+                      🗑️
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -197,17 +225,21 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-in fade-in">
           <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[2.5rem] p-10 shadow-2xl flex flex-col relative text-left">
             <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase mb-8 italic tracking-tighter">
-                {editingUser ? 'Benutzer bearbeiten' : 'Neuer Benutzer'}
+                {editingUser ? <T tkey="admin.users.modal.edit" /> : <T tkey="admin.users.modal.new" />}
             </h3>
             
             <div className="space-y-6 overflow-y-auto max-h-[65vh] pr-2 custom-scrollbar">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Anzeigename</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">
+                    <T tkey="admin.users.modal.name" />
+                  </label>
                   <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={getFieldClass('name')} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Rolle</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">
+                    <T tkey="admin.users.modal.role" />
+                  </label>
                   <select 
                     disabled={isFieldDisabled('role') && editingUser?.role !== 'SuperAdmin'} 
                     value={formData.role} 
@@ -224,7 +256,9 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
 
               {formData.role !== 'User' && (
                 <div className="animate-in slide-in-from-top-2">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">E-Mail Adresse (Pflicht für Admin/Manager)</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">
+                    <T tkey="admin.users.modal.email" />
+                  </label>
                   <input 
                     type="email" 
                     value={formData.email} 
@@ -237,23 +271,31 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
 
               <div className="grid grid-cols-2 gap-4">
                  <div>
-                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Username</label>
+                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">
+                     <T tkey="admin.users.modal.username" />
+                   </label>
                    <input type="text" disabled={isFieldDisabled('username')} value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className={getFieldClass('username')} />
                  </div>
                  <div>
-                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Passwort (Nur zum Zurücksetzen)</label>
-                   <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={getFieldClass('password')} placeholder="Neues Passwort eingeben..." />
+                   <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">
+                     <T tkey="admin.users.modal.password" />
+                   </label>
+                   <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className={getFieldClass('password')} placeholder={t('admin.users.modal.password')} />
                  </div>
               </div>
 
               <div className="relative" ref={dropdownRef}>
-                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">Heimat-Standort</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 px-1">
+                  <T tkey="admin.users.modal.facility" />
+                </label>
                 <div className="relative">
-                  <input type="text" disabled={isFieldDisabled('facilityId')} value={facilitySearch} onChange={(e) => { setFacilitySearch(e.target.value); setIsDropdownOpen(true); }} onFocus={() => setIsDropdownOpen(true)} placeholder="Standort suchen..." className="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 font-bold text-sm outline-none disabled:opacity-50" />
+                  <input type="text" disabled={isFieldDisabled('facilityId')} value={facilitySearch} onChange={(e) => { setFacilitySearch(e.target.value); setIsDropdownOpen(true); }} onFocus={() => setIsDropdownOpen(true)} placeholder={t('admin.users.modal.facility')} className="w-full px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 font-bold text-sm outline-none disabled:opacity-50" />
                 </div>
                 {isDropdownOpen && !isFieldDisabled('facilityId') && (
                   <div className="absolute top-full left-0 w-full mt-2 bg-white dark:bg-slate-900 border border-slate-100 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto">
-                    <button onClick={() => { setFormData({...formData, facilityId: ''}); setFacilitySearch('Kein Standort'); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-3 hover:bg-slate-50 font-bold text-sm border-b">Kein Standort (Global)</button>
+                    <button onClick={() => { setFormData({...formData, facilityId: ''}); setFacilitySearch(t('admin.users.modal.facility.global')); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-3 hover:bg-slate-50 font-bold text-sm border-b">
+                      <T tkey="admin.users.modal.facility.global" />
+                    </button>
                     {filteredFacilities.map(f => (
                       <button key={f.id} onClick={() => { setFormData({...formData, facilityId: f.id}); setFacilitySearch(f.name); setIsDropdownOpen(false); }} className="w-full text-left px-5 py-3 hover:bg-slate-50 font-bold text-sm border-b">{f.name}</button>
                     ))}
@@ -263,8 +305,10 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
 
               {formData.role === 'Manager' && (
                 <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 rounded-[2rem] border border-blue-100 dark:border-blue-800 space-y-4 animate-in slide-in-from-top-2">
-                  <label className="block text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">Zusätzliche Verwaltung</label>
-                  <div className="flex flex-wrap gap-2 mb-3">
+                  <label className="block text-[10px] font-black text-blue-600 uppercase tracking-widest px-1">
+                    <T tkey="admin.users.modal.managed" />
+                  </label>
+                  <div className="flex flex-wrap gap-2">
                     {formData.managedFacilityIds?.map(fid => (
                       <button key={fid} onClick={() => removeManagedId(fid)} className="px-3 py-1.5 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase flex items-center space-x-2">
                         <span>{facilities.find(f => f.id === fid)?.name || fid}</span>
@@ -273,7 +317,7 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
                     ))}
                   </div>
                   <div className="relative" ref={managedDropdownRef}>
-                    <input type="text" value={managedSearch} onChange={e => { setManagedSearch(e.target.value); setIsManagedDropdownOpen(true); }} onFocus={() => setIsManagedDropdownOpen(true)} className="w-full px-5 py-3 rounded-xl bg-white dark:bg-slate-900 border border-blue-100 font-bold text-xs outline-none" placeholder="Weitere Standorte hinzufügen..." />
+                    <input type="text" value={managedSearch} onChange={e => { setManagedSearch(e.target.value); setIsManagedDropdownOpen(true); }} onFocus={() => setIsManagedDropdownOpen(true)} className="w-full px-5 py-3 rounded-xl bg-white dark:bg-slate-900 border border-blue-100 font-bold text-xs outline-none" placeholder={t('admin.users.modal.facilitySearch')} />
                     {isManagedDropdownOpen && managedFilteredFacilities.length > 0 && (
                       <div className="absolute top-full left-0 w-full mt-2 bg-white dark:bg-slate-900 border border-slate-100 rounded-xl shadow-xl z-[60] max-h-48 overflow-y-auto custom-scrollbar">
                         {managedFilteredFacilities.map(f => (
@@ -287,8 +331,12 @@ export const UsersPage: React.FC<UsersPageProps> = ({ t, currentUser, users, set
             </div>
 
             <div className="mt-10 flex justify-end space-x-4">
-              <button onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-500 font-black uppercase text-xs">Abbrechen</button>
-              <button onClick={handleSave} className="bg-blue-600 text-white px-10 py-3 rounded-2xl font-black shadow-xl uppercase text-xs tracking-widest hover:scale-105 transition-transform">Speichern</button>
+              <button onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-500 font-black uppercase text-xs">
+                <T tkey="common.cancel" />
+              </button>
+              <button onClick={handleSave} className="bg-blue-600 text-white px-10 py-3 rounded-2xl font-black shadow-xl uppercase text-xs tracking-widest hover:scale-105 transition-transform">
+                <T tkey="common.save" />
+              </button>
             </div>
           </div>
         </div>

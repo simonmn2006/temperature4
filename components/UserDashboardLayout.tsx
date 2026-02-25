@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { TranslationSet, User, Assignment, FormResponse, Reading, Holiday, Facility, FacilityType, FormTemplate } from '../types';
+import { User, Assignment, FormResponse, Reading, Holiday, Facility, FacilityType, FormTemplate } from '../types';
+import { useBranding, T } from '../src/BrandingContext';
 
 interface UserDashboardLayoutProps {
-  t: TranslationSet;
   activeTab: string;
   onTabChange: (tab: string) => void;
   onLogout: () => void;
@@ -21,15 +21,16 @@ interface UserDashboardLayoutProps {
   facilityTypes: FacilityType[];
 }
 
-const LOGO_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.256 1.181-3.103.493.969.819 2.087.819 3.103z'/%3E%3C/svg%3E";
-
 export const UserDashboardLayout: React.FC<UserDashboardLayoutProps> = ({
-  t, activeTab, onTabChange, onLogout, children, assignments, currentUser, forms, formResponses, readings, holidays,
+  activeTab, onTabChange, onLogout, children, assignments, currentUser, forms, formResponses, readings, holidays,
   isOnline = true, isSyncing = false, offlineQueueCount = 0, facilities, facilityTypes
 }) => {
+  const { settings, t } = useBranding();
   const [now, setNow] = useState(new Date());
   const [showBriefing, setShowBriefing] = useState(true);
   const [briefingCountdown, setBriefingCountdown] = useState(3);
+
+  const LOGO_URL = settings.logoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.256 1.181-3.103.493.969.819 2.087.819 3.103z'/%3E%3C/svg%3E";
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -106,22 +107,22 @@ export const UserDashboardLayout: React.FC<UserDashboardLayoutProps> = ({
     {
       id: 'operations',
       items: [
-        { id: 'user_workspace', icon: '🌡️', label: t.tabs.user_workspace },
-        { id: 'user_forms', icon: '📝', label: t.tabs.user_forms, badge: briefingStats.forms },
+        { id: 'user_workspace', icon: '🌡️', label: t('nav.readings') },
+        { id: 'user_forms', icon: '📝', label: t('nav.checklists'), badge: briefingStats.forms },
       ]
     },
     {
       id: 'compliance',
       items: [
-        { id: 'user_personnel', icon: '🗂️', label: t.tabs.user_personnel },
-        { id: 'user_library', icon: '📚', label: t.tabs.user_library },
-        { id: 'user_reports', icon: '📊', label: t.tabs.user_reports },
+        { id: 'user_personnel', icon: '🗂️', label: t('nav.personnel') },
+        { id: 'user_library', icon: '📚', label: t('nav.documents') },
+        { id: 'user_reports', icon: '📊', label: t('nav.readings') },
       ]
     },
     {
       id: 'learning',
       items: [
-        { id: 'user_academy', icon: '🎓', label: t.tabs.user_academy },
+        { id: 'user_academy', icon: '🎓', label: t('academy.title') },
       ]
     }
   ];
@@ -165,7 +166,7 @@ export const UserDashboardLayout: React.FC<UserDashboardLayoutProps> = ({
           <div className="flex items-center space-x-3 group">
             <img src={LOGO_URL} className="w-10 h-10 object-contain" alt="Logo" />
             <div className="hidden lg:flex flex-col pb-1 min-w-0">
-               <span className="font-black text-slate-900 dark:text-white text-lg leading-none block italic tracking-tighter">gourmetta</span>
+               <span className="font-black text-slate-900 dark:text-white text-lg leading-none block italic tracking-tighter">{settings.appName}</span>
                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">HACCP Live</span>
             </div>
           </div>
