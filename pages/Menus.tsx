@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { TranslationSet, Menu } from '../types';
+import { T } from '../src/BrandingContext';
 
 interface MenusPageProps {
   t: (key: string) => string;
@@ -110,8 +111,12 @@ export const MenusPage: React.FC<MenusPageProps> = ({ t, menus, setMenus, onSync
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t.tabs.menus}</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">Verwaltung der Speisepläne und Menüs</p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+            <T tkey="admin.menus.title" />
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">
+            <T tkey="admin.menus.subtitle" />
+          </p>
         </div>
         <button onClick={() => openModal()} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black shadow-xl">+ Neues Menü</button>
       </div>

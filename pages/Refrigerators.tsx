@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { TranslationSet, Refrigerator, Facility, RefrigeratorType, User, Assignment, AuditLog, Alert } from '../types';
+import { T } from '../src/BrandingContext';
 
 interface RefrigeratorsPageProps {
   t: (key: string) => string;
@@ -215,8 +216,12 @@ export const RefrigeratorsPage: React.FC<RefrigeratorsPageProps> = ({
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Kühlsysteme & Standorte</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">Permanente Geräteverknüpfung und Verwaltung</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+            <T tkey="admin.refrigerators.title" />
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">
+            <T tkey="admin.refrigerators.subtitle" />
+          </p>
         </div>
         <button 
           onClick={handleOpenCreate}

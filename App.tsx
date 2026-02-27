@@ -345,12 +345,22 @@ const App: React.FC = () => {
     }
   }, [addToSyncQueue]);
 
-  const handleLogin = (username: string, password?: string, stayLoggedIn?: boolean) => {
+  const handleLogin = async (username: string, password?: string, stayLoggedIn?: boolean) => {
     setLoginError(null);
-    const u = users.find(x => x.username.toLowerCase() === username.toLowerCase() && x.password === password) || 
-            (username === 'super' && password === 'super' ? {id:'U-SUPER', name:'System SuperAdmin', role:'SuperAdmin', status:'Active', username:'super', email:'alarm@gourmetta.de'} : null);
-    
-    if (u) {
+    try {
+      const res = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Ungültiger Benutzername oder Passwort.");
+      }
+
+      const u = await res.json();
+      
       // Automatically detect view based on role
       const isAdminRole = ['Admin', 'SuperAdmin', 'Manager'].includes(u.role);
       let finalView: 'admin' | 'user' = isAdminRole ? 'admin' : 'user';
@@ -367,8 +377,8 @@ const App: React.FC = () => {
       const destinationTab = (finalView === 'admin') ? AdminTab.DASHBOARD : 'user_workspace';
       setActiveTab(destinationTab);
       sync('audit-logs', { userId: u.id, userName: u.name, action: 'LOGIN', entity: 'SYSTEM', details: `Login detected as ${finalView}` });
-    } else {
-      setLoginError("Ungültiger Benutzername oder Passwort.");
+    } catch (err: any) {
+      setLoginError(err.message || "Ungültiger Benutzername oder Passwort.");
       setTimeout(() => setLoginError(null), 3000);
     }
   };

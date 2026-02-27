@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { TranslationSet, Facility, FacilityType, CookingMethod, User, AuditLog, AdminTab, Refrigerator } from '../types';
+import { T } from '../src/BrandingContext';
 
 interface FacilitiesPageProps {
   t: (key: string) => string;
@@ -162,8 +163,12 @@ export const FacilitiesPage: React.FC<FacilitiesPageProps> = ({ t, facilities, s
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-left">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{t.tabs.facilities}</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">Verwaltung der Gourmetta Standorte</p>
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+            <T tkey="admin.facilities.title" />
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">
+            <T tkey="admin.facilities.subtitle" />
+          </p>
         </div>
         <button onClick={() => openModal()} className="bg-blue-600 text-white px-8 py-3 rounded-2xl font-black shadow-xl shadow-blue-500/20 hover:scale-[1.02] transition-all uppercase text-xs tracking-widest">+ Standort hinzufügen</button>
       </div>

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { TranslationSet, ReminderConfig, AuditLog } from '../types';
+import { T } from '../src/BrandingContext';
 
 const DAYS_OF_WEEK = [
   { id: 1, label: 'Mo' }, { id: 2, label: 'Di' }, { id: 3, label: 'Mi' },
@@ -108,7 +109,12 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({ t, reminders, setR
     <div className="space-y-8 animate-in fade-in duration-500 text-left pb-20">
       <header className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-2">Push-Erinnerungen</h1>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-2">
+            <T tkey="admin.reminders.title" />
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">
+            <T tkey="admin.reminders.subtitle" />
+          </p>
         </div>
         <button 
           onClick={() => openModal()}

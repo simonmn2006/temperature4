@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { TranslationSet, AuditLog } from '../types';
+import { T } from '../src/BrandingContext';
 
 interface AuditLogsPageProps {
   t: (key: string) => string;
@@ -39,8 +40,12 @@ export const AuditLogsPage: React.FC<AuditLogsPageProps> = ({ t, logs }) => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 text-left">
       <header>
-        <h1 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">System Logs</h1>
-        <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 font-medium">Vollständige Historie aller Admin-Aktionen</p>
+        <h1 className="text-xl lg:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+          <T tkey="admin.logs.title" />
+        </h1>
+        <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 font-medium">
+          <T tkey="admin.logs.subtitle" />
+        </p>
       </header>
 
       <div className="bg-white dark:bg-slate-900 p-4 lg:p-6 rounded-[1.5rem] lg:rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-4">

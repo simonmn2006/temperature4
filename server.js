@@ -7,6 +7,7 @@ import nodemailer from 'nodemailer';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import { createServer as createViteServer } from 'vite';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -398,19 +399,84 @@ app.post('/api/settings/facility-types', async (req, res) => {
 });
 app.delete('/api/settings/facility-types/:id', (req, res) => query('DELETE FROM settings_facility_types WHERE id = ?', [req.params.id]).then(() => res.sendStatus(200)));
 
-app.get('/api/users', (req, res) => query('SELECT * FROM users').then(r => res.json(r || [])));
-app.post('/api/users', async (req, res) => {
-    const { id, name, username, password, email, role, status, facilityId, managedFacilityIds, emailAlerts, telegramAlerts, allFacilitiesAlerts } = req.body;
-    try {
-        await pool.query(`INSERT INTO users (id, name, username, password, email, role, status, facilityId, managedFacilityIds, emailAlerts, telegramAlerts, allFacilitiesAlerts) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
-                     ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), email=VALUES(email), status=VALUES(status), facilityId=VALUES(facilityId), 
-                     managedFacilityIds=VALUES(managedFacilityIds), emailAlerts=VALUES(emailAlerts), telegramAlerts=VALUES(telegramAlerts), allFacilitiesAlerts=VALUES(allFacilitiesAlerts)`, 
-        [id, name, username, password, email, role, status, facilityId, JSON.stringify(managedFacilityIds || []), !!emailAlerts, !!telegramAlerts, !!allFacilitiesAlerts]);
-        broadcast({ type: 'UPDATE', entity: 'users' });
-        res.sendStatus(200);
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
+    app.post('/api/login', async (req, res) => {
+        const { username, password } = req.body;
+        if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+
+        // Special case for superadmin if not in DB
+        if (username === 'super' && password === 'super') {
+            return res.json({ id: 'U-SUPER', name: 'System SuperAdmin', role: 'SuperAdmin', status: 'Active', username: 'super', email: 'alarm@gourmetta.de' });
+        }
+
+        try {
+            const users = await query('SELECT * FROM users WHERE username = ?', [username]);
+            if (!users || users.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+
+            const user = users[0];
+            // Check if password matches (support both plain text for migration and hashed)
+            let isMatch = false;
+            if (user.password && (user.password.startsWith('$2a$') || user.password.startsWith('$2b$'))) {
+                isMatch = await bcrypt.compare(password, user.password);
+            } else {
+                isMatch = user.password === password;
+                // Auto-upgrade to hashed password if it was plain text
+                if (isMatch) {
+                    const hashed = await bcrypt.hash(password, 10);
+                    await query('UPDATE users SET password = ? WHERE id = ?', [hashed, user.id]);
+                }
+            }
+
+            if (isMatch) {
+                const { password: _, ...userWithoutPassword } = user;
+                res.json(userWithoutPassword);
+            } else {
+                res.status(401).json({ error: 'Invalid credentials' });
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Server error' });
+        }
+    });
+
+    app.get('/api/users', async (req, res) => {
+        const users = await query('SELECT id, name, role, status, username, email, facilityId, managedFacilityIds, telegramAlerts, allFacilitiesAlerts, vaultPin FROM users');
+        res.json(users || []);
+    });
+
+    app.post('/api/users', async (req, res) => {
+        const { id, name, username, password, email, role, status, facilityId, managedFacilityIds, emailAlerts, telegramAlerts, allFacilitiesAlerts, vaultPin } = req.body;
+        
+        let finalPassword = password;
+        if (password && !password.startsWith('$2a$') && !password.startsWith('$2b$')) {
+            finalPassword = await bcrypt.hash(password, 10);
+        }
+
+        let finalVaultPin = vaultPin;
+        if (vaultPin && !vaultPin.startsWith('$2a$') && !vaultPin.startsWith('$2b$')) {
+            finalVaultPin = await bcrypt.hash(vaultPin, 10);
+        }
+
+        try {
+            await pool.query(`INSERT INTO users (id, name, username, password, email, role, status, facilityId, managedFacilityIds, emailAlerts, telegramAlerts, allFacilitiesAlerts, vaultPin) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) 
+                         ON DUPLICATE KEY UPDATE name=VALUES(name), 
+                         password=IF(VALUES(password) IS NOT NULL AND VALUES(password) != "", VALUES(password), password), 
+                         email=VALUES(email), status=VALUES(status), facilityId=VALUES(facilityId), 
+                         managedFacilityIds=VALUES(managedFacilityIds), emailAlerts=VALUES(emailAlerts), 
+                         telegramAlerts=VALUES(telegramAlerts), allFacilitiesAlerts=VALUES(allFacilitiesAlerts),
+                         vaultPin=IF(VALUES(vaultPin) IS NOT NULL AND VALUES(vaultPin) != "", VALUES(vaultPin), vaultPin)`, 
+            [id, name, username, finalPassword, email, role, status, facilityId, JSON.stringify(managedFacilityIds || []), !!emailAlerts, !!telegramAlerts, !!allFacilitiesAlerts, finalVaultPin]);
+            broadcast({ type: 'UPDATE', entity: 'users' });
+            res.sendStatus(200);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: err.message });
+        }
+    });
+app.delete('/api/users/:id', (req, res) => query('DELETE FROM users WHERE id = ?', [req.params.id]).then(() => {
+    broadcast({ type: 'UPDATE', entity: 'users' });
+    res.sendStatus(200);
+}).catch(err => res.status(500).json({ error: err.message })));
 
 app.get('/api/facilities', (req, res) => query('SELECT * FROM facilities').then(r => res.json(r || [])));
 app.post('/api/facilities', async (req, res) => {

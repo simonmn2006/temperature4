@@ -14,6 +14,7 @@ import {
   FacilityType
 } from '../types';
 import { GermanCalendarPicker } from '../components/GermanCalendarPicker';
+import { T } from '../src/BrandingContext';
 
 const DAYS_OF_WEEK = [
   { id: 1, label: 'Mo' }, { id: 2, label: 'Di' }, { id: 3, label: 'Mi' },
@@ -295,8 +296,12 @@ export const AssignmentsPage: React.FC<AssignmentsPageProps> = ({ t, assignments
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-2">{t.tabs.assignments}</h1>
-          <p className="text-base text-slate-500 font-medium tracking-tight">Aufgabenzuweisung & Terminierung</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight leading-none mb-2">
+            <T tkey="admin.assignments.title" />
+          </h1>
+          <p className="text-base text-slate-500 font-medium tracking-tight">
+            <T tkey="admin.assignments.subtitle" />
+          </p>
         </div>
         <button 
           onClick={() => { 

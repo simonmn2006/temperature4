@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { TranslationSet, Document, AuditLog, DocumentCategory } from '../types';
+import { T } from '../src/BrandingContext';
 
 interface DocumentsPageProps {
   t: (key: string) => string;
@@ -81,8 +82,12 @@ export const DocumentsPage: React.FC<DocumentsPageProps> = ({ t, documents, setD
   return (
     <div className="space-y-8 animate-in fade-in duration-500 text-left pb-20">
       <header>
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Handbuch-Verwaltung</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium italic">Sicherheitsunterweisungen und Dokumentation für Mitarbeiter</p>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+          <T tkey="admin.documents.title" />
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">
+          <T tkey="admin.documents.subtitle" />
+        </p>
       </header>
 
       <div className="bg-white dark:bg-slate-900 p-8 rounded-[3.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">

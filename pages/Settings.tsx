@@ -11,6 +11,7 @@ import {
   Facility
 } from '../types';
 import { GermanCalendarPicker } from '../components/GermanCalendarPicker';
+import { T } from '../src/BrandingContext';
 
 type SettingsSection = 'holidays' | 'cookingMethods' | 'fridgeTypes' | 'facilityTypes' | 'excludedFacilities' | 'legal';
 
@@ -152,11 +153,11 @@ export const SettingsPage: React.FC<{
   };
 
   const sections: { id: SettingsSection; label: string; icon: string }[] = [
-    { id: 'holidays', label: t.settings.holidays, icon: '📅' },
-    { id: 'cookingMethods', label: t.settings.cookingMethods, icon: '🍳' },
-    { id: 'fridgeTypes', label: t.settings.fridgeTypes, icon: '❄️' },
-    { id: 'facilityTypes', label: t.settings.facilityTypes, icon: '🏢' },
-    { id: 'excludedFacilities', label: t.settings.excludedFacilities, icon: '🚫' },
+    { id: 'holidays', label: t('settings.holidays'), icon: '📅' },
+    { id: 'cookingMethods', label: t('settings.cookingMethods'), icon: '🍳' },
+    { id: 'fridgeTypes', label: t('settings.fridgeTypes'), icon: '❄️' },
+    { id: 'facilityTypes', label: t('settings.facilityTypes'), icon: '🏢' },
+    { id: 'excludedFacilities', label: t('settings.excludedFacilities'), icon: '🚫' },
     { id: 'legal', label: 'Rechtliches', icon: '🛡️' }
   ];
 
@@ -230,8 +231,12 @@ export const SettingsPage: React.FC<{
       )}
 
       <div className="mb-2">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t.tabs.settings}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">Systemkonfiguration & Master-Daten</p>
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+          <T tkey="admin.settings.title" />
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-tight">
+          <T tkey="admin.settings.subtitle" />
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-2xl w-fit">
